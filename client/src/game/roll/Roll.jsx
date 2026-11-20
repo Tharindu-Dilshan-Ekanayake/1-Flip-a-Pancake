@@ -217,9 +217,10 @@ const _toCam = new Vector3()
 /** Where the camera sits (from the pancake) and looks (from the pancake) in each part of the launch. */
 function cameraAim(outOffset, outLook) {
   if (roll.phase === 'throw') {
-    // Behind you on the launch pad, low, looking up past you at the sky.
-    outOffset.set(1.2, 0.6, 9.5)
-    outLook.set(0, 3.5, -2)
+    // Behind you on the launch pad, framing you as you squat and jump with the pan (the
+    // pancake leaves from the top of the jump, up above): then it tilts up after it.
+    outOffset.set(1.4, -0.9, 8)
+    outLook.set(0, -1.6, -1)
   } else if (roll.phase === 'air') {
     // Below and behind the climbing pancake, looking up the sky at what's coming down.
     outOffset.set(sky.steer * -0.45, -2.4, 10.5)
@@ -359,7 +360,7 @@ export default function Roll() {
         startedFor.current = roll.startedAt
         // Ease from wherever the lobby camera was.
         camOffset.copy(camera.position).sub(p)
-        lookOffset.set(0, 2, -6)
+        lookOffset.set(0, -1.6, -1)
         baseFov.current = camera.fov
         const tally = trophyTally.current
         tally.next = TROPHY_FIRST
@@ -396,7 +397,10 @@ export default function Roll() {
           const stretch = Math.min(0.25, speed / 900)
           const sinceCatch = now - sky.lastCatchAt
           const pop = sinceCatch < 400 ? 1 + 0.28 * Math.exp(-sinceCatch / 90) : 1
-          const big = pop * HERO_SIZE
+          // Out of the pan pancake-sized, swelling to its full flying size in a blink.
+          const sinceOut = roll.releasedAt ? (now - roll.releasedAt) / 1000 : 0
+          const grow = 0.22 + 0.78 * smoothstep(0, 0.28, sinceOut)
+          const big = pop * HERO_SIZE * grow
           mesh.scale.set((1 - stretch * 0.4) * big, (1 + stretch) * big, (1 - stretch * 0.4) * big)
           heroState.t = now / 1000
           heroState.phase = roll.phase

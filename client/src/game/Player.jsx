@@ -15,6 +15,8 @@ import HeldPhone from './HeldPhone'
 import PlayerAvatar from './PlayerAvatar'
 import { pancakeUp, releasePoint, spawnThrow, THROW_RELEASE, TOSS_TIME, tossTarget } from './practice'
 import { cancelPull, isPulling, launch, updatePull } from './launch'
+import { tossSpin } from './playerPose'
+import { T_RELEASE } from './roll/launchPath'
 import { roll } from './roll/rollControl'
 import { runtime } from './runtime'
 import { startToss, toss } from './toss'
@@ -35,6 +37,7 @@ const _input = new Vector3()
 const _move = new Vector3()
 const _camForward = new Vector3()
 const _camRight = new Vector3()
+const _spinQuat = new Quaternion()
 const _targetQuat = new Quaternion()
 const _up = new Vector3(0, 1, 0)
 const _clamped = { x: 0, z: 0 }
@@ -109,6 +112,8 @@ export function Player({ onAvatarReady }) {
     stride: 0,
     windup: 0,
     throwT: 0,
+    tossAfter: 0,
+    tossStyle: 'good',
     /** How far through the current throw (0-1; 1 when not throwing), last frame. */
     tossF: 1,
   })
@@ -237,7 +242,21 @@ export function Player({ onAvatarReady }) {
     // --- The throw's pose and the phone in your hand ---------------------------------
     motion.windup = throwing ? Math.max(0.15, launch.charge) : 0
     motion.wobble = throwing && launch.full ? 1 : 0
-    motion.throwT = roll.active ? roll.throwT : 0
+    // The jump-and-toss runs from the moment you let go - on your screen, straight away -
+    // and the launch picks it up when the server answers (its clock starts at the same
+    // moment: rollControl.beginRoll). Until then it never quite lets the pancake go.
+    if (roll.active) {
+      motion.throwT = roll.throwT
+      motion.tossAfter = roll.releasedAt ? (now - roll.releasedAt) / 1000 : 0
+      motion.tossStyle = roll.hit || launch.grade
+    } else if (launch.released) {
+      motion.throwT = Math.max(0.001, Math.min(0.95, (now - launch.releasedAt) / 1000 / T_RELEASE))
+      motion.tossAfter = 0
+      motion.tossStyle = launch.grade
+    } else {
+      motion.throwT = 0
+      motion.tossAfter = 0
+    }
     // A throw (a click, a tap, THROW: toss.js), and the one lined up after it. Standing
     // on a throw pad it throws by itself too, one every TRAIN_INTERVAL - clicking as well
     // throws faster still.
@@ -260,6 +279,9 @@ export function Player({ onAvatarReady }) {
       group.position.set(pos.x, y, pos.z)
       _targetQuat.setFromAxisAngle(_up, player.yaw)
       visual.quaternion.slerp(_targetQuat, throwing || roll.active ? 1 : 1 - Math.pow(0.0005, delta))
+      // A PERFECT launch spins you round once in the air.
+      const spin = motion.throwT > 0 ? tossSpin(motion.throwT, motion.tossAfter, motion.tossStyle) : 0
+      if (spin) visual.quaternion.multiply(_spinQuat.setFromAxisAngle(_up, spin))
       visual.position.set(0, 0, 0)
     }
     shownAt.set(pos.x, pos.y, pos.z)

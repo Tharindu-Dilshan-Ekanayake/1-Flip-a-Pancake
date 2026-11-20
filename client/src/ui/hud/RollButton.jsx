@@ -71,6 +71,8 @@ export function RollButton() {
     if (!launch.gripping) return
     const charge = letGo()
     sfx.stretchStop()
+    // The jump starts right away (Player): its whoosh too.
+    sfx.jumpWhoosh()
     setGripping(false)
     setAuto(false)
     actions.roll(plain ? undefined : Math.round(charge * 1000) / 1000)
