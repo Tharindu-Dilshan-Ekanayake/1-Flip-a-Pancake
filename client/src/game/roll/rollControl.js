@@ -8,7 +8,7 @@ import { getQuality } from '../../store/quality'
 import { fadeThrough } from '../../ui/fade'
 import { burst, fireBurst } from '../fx/fxQueue'
 import { spawnScattered } from '../fx/popups'
-import { consumePull } from '../launch'
+import { consumePull, launch } from '../launch'
 import { runtime } from '../runtime'
 import { zones } from '../worldLook'
 import { showHit, showWorldBanner } from './hudLink'
@@ -217,12 +217,18 @@ function reachTop(now) {
 export function beginRoll(result) {
   clearTimers()
   const game = getGame()
+  // The jump-and-toss started on your screen the moment you let go (Player), not when the
+  // answer arrived: the launch's clock starts then too, so it carries on seamlessly with
+  // no wait for the network. (If the answer took longer than the heave, it picks up just
+  // before the pancake leaves the pan.)
+  const now = performance.now()
+  const letGoAt = launch.released ? Math.max(launch.releasedAt, now - (T_RELEASE - 0.06) * 1000) : now
   consumePull()
   const end = landingFloor(result.distance)
   Object.assign(roll, createDropState(), {
     active: true,
     stopped: false,
-    startedAt: performance.now(),
+    startedAt: letGoAt,
     distance: result.distance,
     duration: result.duration,
     wins: result.wins,

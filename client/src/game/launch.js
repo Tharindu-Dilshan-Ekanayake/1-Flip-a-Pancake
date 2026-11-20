@@ -1,4 +1,4 @@
-import { CHARGE_TIME, twangAt } from '@shared/balance'
+import { CHARGE_TIME, hitGrade, twangAt } from '@shared/balance'
 
 /**
  * Your throw, before the authority hears about it. Hold DROP in the DROP ZONE and you wind
@@ -26,6 +26,8 @@ export const launch = {
   /** Let go and waiting for the authority: when. */
   released: false,
   releasedAt: 0,
+  /** The grade you let go on (balance hitGrade id): the jump-and-toss plays it straight away. */
+  grade: 'good',
 }
 
 /** No answer this long after letting go (out of the zone, busy): give the throw up. */
@@ -62,6 +64,7 @@ export function letGo(now = performance.now()) {
   launch.auto = false
   launch.released = true
   launch.releasedAt = now
+  launch.grade = hitGrade(charge).id
   return charge
 }
 

@@ -22,7 +22,7 @@ export const COLUMN = { x: DROP_SPOT.x, z: DROP_SPOT.z - 2.4 }
 /** Kept for the template's consumers: the middle of the "tower" is the column. */
 export const HOTEL = COLUMN
 /** Where the pancake leaves the pan, and where layer 0 starts (DROP_ROOF metres). */
-export const RELEASE_Y = groundHeightAt(DROP_SPOT.x, DROP_SPOT.z) + 2.3
+export const RELEASE_Y = groundHeightAt(DROP_SPOT.x, DROP_SPOT.z) + 3.6
 export const SKY_BASE = 70
 /** World height of each sky layer's band. */
 export const LAYER_H = 70

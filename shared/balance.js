@@ -315,7 +315,7 @@ export const TROPHY_METERS = 80
  * swing. (The charge before it is yours: you hold for as long as you like, and the server
  * only hears about the release.)
  */
-export const ROLL_LAUNCH = 0.28
+export const ROLL_LAUNCH = 0.34
 /** Seconds the phone falls through the sky, from your hand to the hotel's glass roof. */
 export const DROP_AIR = 2.4
 /** Seconds the phone takes to bounce and settle once it stops on a floor. */

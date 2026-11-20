@@ -156,30 +156,72 @@ function windingUp(charge, wobble, time, w) {
   pose.lift -= (0.12 + 0.2 * c) * w
 }
 
+/** How high each grade of launch jumps (metres): a PERFECT one leaps highest. */
+const TOSS_JUMP = { perfect: 1.7, great: 1.35, good: 1.1, weak: 0.75 }
+/** Of the heave (0-1): the quick squat before the jump, and the takeoff. */
+const TOSS_TAKEOFF = 0.3
+/** Seconds from the top of the jump (the pancake leaving) back down to the ground. */
+const TOSS_FALL = 0.26
+
+/** How high off the ground the jump has you: up to the top as the pancake leaves, then back down. */
+function tossHeight(t, after, style) {
+  const top = TOSS_JUMP[style] ?? TOSS_JUMP.good
+  if (t < 1) {
+    const u = clamp01((t - TOSS_TAKEOFF) / (1 - TOSS_TAKEOFF))
+    return top * (1 - (1 - u) * (1 - u))
+  }
+  const f = clamp01(after / TOSS_FALL)
+  return top * (1 - f * f)
+}
+
 /**
- * The launch (`t` 0-1 through the heave; the pancake leaves at the end): springing up out
- * of the crouch, the pan swung up over your head - and after, standing on tiptoe, pan
- * still up, watching it go.
+ * A PERFECT launch's spin: one full turn through the air, from takeoff to landing (radians
+ * about the vertical; 0 for any other grade). The player turns the whole body by it.
  */
-function throwing(t, time, w) {
-  const spring = smooth(0.1, 0.8, t)
-  const crouch = 1 - smooth(0, 0.45, t)
-  add('ArmR1', lerp(-0.2, -3.0, spring), 0.12 * OUT_R, 0, w)
-  add('ArmR2', lerp(-0.9, -0.2, spring), 0, 0, w)
-  add('ArmL1', lerp(-0.3, -2.7, spring), 0.3 * OUT_L, 0, w)
+export function tossSpin(t, after, style) {
+  if (style !== 'perfect' || t <= TOSS_TAKEOFF) return 0
+  const p = t < 1 ? ((t - TOSS_TAKEOFF) / (1 - TOSS_TAKEOFF)) * 0.55 : 0.55 + clamp01(after / TOSS_FALL) * 0.45
+  return Math.PI * 2 * smooth(0, 1, p)
+}
+
+/**
+ * The launch: a jump-and-toss. A quick squat with the pan low, then a leap - legs tucking
+ * under, the pan swinging up - and right at the top of the jump the pan flicks and the
+ * pancake shoots up out of it (`t` 0-1 through the heave; it leaves at 1). Then down again,
+ * a bouncy landing, and watching it go - arms up cheering after a GREAT or PERFECT one.
+ * `after` is seconds since the pancake left, `style` the grade.
+ */
+function throwing(t, time, w, after = 0, style = 'good') {
+  const squat = t < TOSS_TAKEOFF ? smooth(0, TOSS_TAKEOFF, t) : 1 - smooth(TOSS_TAKEOFF, TOSS_TAKEOFF + 0.18, t)
+  const swing = smooth(TOSS_TAKEOFF * 0.6, 1, t)
+  const flick = smooth(0.82, 1, t) * (1 - smooth(0.12, 0.35, after))
+  const air = t >= TOSS_TAKEOFF && after < TOSS_FALL
+  const tuck = air ? Math.sin(Math.PI * clamp01(t < 1 ? (t - TOSS_TAKEOFF) / (1 - TOSS_TAKEOFF) * 0.5 : 0.5 + (after / TOSS_FALL) * 0.5)) : 0
+  const landed = after >= TOSS_FALL
+  const land = landed ? Math.sin(Math.PI * clamp01((after - TOSS_FALL) / 0.22)) : 0
+  const cheer = landed && (style === 'perfect' || style === 'great') ? smooth(TOSS_FALL, TOSS_FALL + 0.3, after) : 0
+  const bend = squat + land * 0.7
+  // The pan: low behind you in the squat, swung up overhead, flicked as the pancake goes.
+  add('ArmR1', lerp(0.5, -3.05, swing) + 0.35 * flick, 0.12 * OUT_R, 0, w)
+  add('ArmR2', lerp(-0.6, -0.15, swing) - 0.55 * flick, 0, 0, w)
+  add('ArmL1', lerp(0.4, -2.6, swing), 0.35 * OUT_L, 0, w)
   add('ArmL2', -0.3, 0, 0, w)
-  add('Spine1', lerp(0.45, -0.18, spring), 0, 0, w)
-  add('Neck1', lerp(-0.4, -0.75, spring), 0, 0, w)
-  add('LegL1', -1.05 * crouch, 0.12 * OUT_L, 0, w)
-  add('LegL2', 1.8 * crouch, 0, 0, w)
-  add('LegR1', -1.05 * crouch, 0.12 * OUT_R, 0, w)
-  add('LegR2', 1.8 * crouch, 0, 0, w)
-  pose.lift += (-0.32 * crouch + 0.1 * spring * (1 - smooth(0.8, 1, t))) * w
-  // Done: watching it climb, swaying a little.
-  if (t >= 1) {
-    const sway = Math.sin(time * 2) * 0.03
-    add('Spine1', sway, 0, 0, w)
+  add('Spine1', 0.5 * squat - 0.22 * swing * (1 - squat) + 0.25 * land, 0, 0, w)
+  add('Neck1', -0.3 * squat - 0.7 * swing, 0, 0, w)
+  // Legs: bent in the squat and the landing, tucked under in the air.
+  add('LegL1', -1.05 * bend - 0.9 * tuck, 0.12 * OUT_L, 0, w)
+  add('LegL2', 1.8 * bend + 1.4 * tuck, 0, 0, w)
+  add('LegR1', -1.05 * bend - 0.7 * tuck, 0.12 * OUT_R, 0, w)
+  add('LegR2', 1.8 * bend + 1.2 * tuck, 0, 0, w)
+  pose.lift += (tossHeight(t, after, style) - 0.32 * bend) * w
+  if (landed) {
+    // Watching it climb: swaying, or arms up and bouncing after a great launch.
+    const wave = Math.sin(time * 10) * 0.28 * cheer
+    add('ArmL1', 0.4 * cheer + wave, 0.2 * OUT_L * cheer, 0, w)
+    add('ArmR1', 0.3 * cheer - wave, 0.2 * OUT_R * cheer, 0, w)
+    add('Spine1', Math.sin(time * 2) * 0.03, 0, 0, w)
     add('Neck1', -0.1, 0, 0, w)
+    pose.lift += Math.abs(Math.sin(time * 7)) * 0.12 * cheer * w
   }
 }
 
@@ -225,6 +267,8 @@ export function computePose(motion) {
     windup = 0,
     wobble = 0,
     throwT = 0,
+    tossAfter = 0,
+    tossStyle = 'good',
     cheer = 0,
   } = motion
   for (const name of POSED_BONES) {
@@ -238,7 +282,7 @@ export function computePose(motion) {
   pose.stretchR = 1
 
   if (throwT > 0) {
-    throwing(throwT, time, 1)
+    throwing(throwT, time, 1, tossAfter, tossStyle)
     return pose
   }
   if (windup > 0) {
