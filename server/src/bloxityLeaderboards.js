@@ -19,8 +19,8 @@ import { activePlayers } from './registry.js'
  */
 export const BLOXITY_LEADERBOARDS = [
   { id: 'rebirths', label: 'Rebirths', order: 'desc', mode: 'best', format: 'number', reset: 'none' },
-  { id: 'wins', label: 'Total Wins', order: 'desc', mode: 'best', format: 'compact', reset: 'none' },
-  { id: 'distance', label: 'Deepest Drop (m)', order: 'desc', mode: 'best', format: 'compact', reset: 'none' },
+  { id: 'wins', label: 'Total Trophies', order: 'desc', mode: 'best', format: 'compact', reset: 'none' },
+  { id: 'distance', label: 'Highest Launch (m)', order: 'desc', mode: 'best', format: 'compact', reset: 'none' },
   { id: 'playtime', label: 'Minutes Played', order: 'desc', mode: 'best', format: 'number', reset: 'none' },
 ]
 

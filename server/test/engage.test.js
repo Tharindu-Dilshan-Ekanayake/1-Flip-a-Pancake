@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { comboBonus, crowdBonus, DAY_MS, LUCKY_CHANCE, QUEST_TYPES, QUESTS_PER_DAY, streakMultiplier } from '../../shared/balance.js'
+import { bubbleCount, comboBonus, crowdBonus, DAY_MS, LUCKY_CHANCE, QUEST_TYPES, QUESTS_PER_DAY, streakMultiplier } from '../../shared/balance.js'
 import { applyStreak, claimQuest, claimQuestBonus, createQuestDay, ensureQuests, progressQuests, questsReady, rollLuckyGift } from '../../shared/engage.js'
 import { applyRoll, createProfile, normalizeProfile, winsMultiplier, winsForRolls } from '../../shared/logic.js'
 import { PlayerSession } from '../../shared/session.js'
@@ -139,4 +139,28 @@ test('the session feeds quests from launches and tells the client when one is do
   assert.equal(of('reward').length, 1)
   // The streak news rides along with the session state.
   assert.equal(session.session.streak.days, 1)
+})
+
+test('strength bubbles pay only during your own launch, each once, never more than it has', () => {
+  const now = 10 * DAY
+  const { session, profile, of } = makeSession({ now })
+  // No launch yet: nothing.
+  session.handle('bubble', { index: 0 }, now)
+  assert.equal(of('train').length, 0)
+  session.handle('roll', { accuracy: 0.5 }, now)
+  const roll = of('roll')[0].payload
+  const count = bubbleCount(roll.duration)
+  assert.ok(count >= 3)
+  const before = profile.health
+  session.handle('bubble', { index: 0 }, now + 1000)
+  session.handle('bubble', { index: 0 }, now + 1100) // the same bubble twice
+  session.handle('bubble', { index: count }, now + 1200) // past the last
+  session.handle('bubble', { index: -1 }, now + 1200)
+  session.handle('bubble', { index: 'x' }, now + 1200)
+  const gains = of('train').filter((e) => e.payload.source === 'bubble')
+  assert.equal(gains.length, 1)
+  assert.ok(profile.health > before)
+  // Long after the launch has ended: refused.
+  session.handle('bubble', { index: 1 }, now + roll.duration * 1000 + 5000)
+  assert.equal(of('train').filter((e) => e.payload.source === 'bubble').length, 1)
 })

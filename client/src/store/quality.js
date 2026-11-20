@@ -12,7 +12,11 @@ export const QUALITY_LEVELS = ['LOW', 'MEDIUM', 'HIGH']
 export const PRESETS = {
   LOW: {
     dpr: 1,
-    antialias: false,
+    /**
+     * Smooth edges on LOW too: without it every block edge and stripe shimmers in jaggies.
+     * Phone GPUs (tile-based) resolve MSAA on chip, so it costs them very little.
+     */
+    antialias: true,
     /** 'blob' = fake contact shadows only; 'realtime' = shadow-mapped sun. */
     shadows: 'blob',
     shadowMapSize: 0,
@@ -28,14 +32,13 @@ export const PRESETS = {
     /**
      * Other players are drawn this far away - the whole lobby - and the nearest
      * `remoteAvatars` of them within `remoteAvatarDistance` as their real Boxity avatar
-     * (anyone else as the blocky figure). On every preset that's everyone in the room:
-     * players want to see each other as themselves, across the whole lobby. A Boxity
-     * avatar is ~100 triangles and one draw call plus one per worn item, so a full room
-     * of 8 typically adds 20-40 draw calls; if a weak device can't keep up, the FPS
-     * monitor lowers the resolution (RENDER_SCALES) rather than taking avatars away.
+     * (anyone else as the blocky figure, all of them in one instanced draw call). A
+     * Boxity avatar is ~100 triangles and one draw call plus one per worn item, so a full
+     * room of 12 (11 others) would add 30-50 draw calls: LOW shows the nearest 5 as real
+     * avatars to stay inside the mobile budget of 80, MEDIUM 8 and HIGH all 11.
      */
     remoteDrawDistance: 150,
-    remoteAvatars: 7,
+    remoteAvatars: 5,
     remoteAvatarDistance: 150,
     remoteNameDistance: 40,
     /** World labels fade out past this. */
@@ -58,7 +61,7 @@ export const PRESETS = {
     cloudCount: 14,
     maxTexture: 1024,
     remoteDrawDistance: 150,
-    remoteAvatars: 7,
+    remoteAvatars: 8,
     remoteAvatarDistance: 150,
     remoteNameDistance: 55,
     labelDistance: 110,
@@ -78,7 +81,7 @@ export const PRESETS = {
     cloudCount: 18,
     maxTexture: 1024,
     remoteDrawDistance: 150,
-    remoteAvatars: 7,
+    remoteAvatars: 11,
     remoteAvatarDistance: 150,
     remoteNameDistance: 70,
     labelDistance: 150,

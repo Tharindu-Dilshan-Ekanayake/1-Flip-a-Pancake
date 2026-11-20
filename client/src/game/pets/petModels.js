@@ -299,6 +299,94 @@ const MODELS = {
   },
 }
 
+// --- Frosty Peaks' Frost Egg ---------------------------------------------------------
+MODELS.penguin = (p) => {
+  body(p, '#1f2a3a', { belly: '#ffffff', feet: '#ff9a1f' })
+  p.box(0, 0.45, 0.505, 0.62, 0.62, 0.03, '#ffffff', STYLE.SMOOTH)
+  eyes(p, { y: 0.72 })
+  p.box(0, 0.55, 0.56, 0.2, 0.1, 0.14, '#ff9a1f', STYLE.SMOOTH)
+  for (const side of [-1, 1]) p.box(side * 0.56, 0.5, 0, 0.1, 0.5, 0.4, '#1f2a3a', STYLE.SMOOTH, [0, 0, side * 0.25])
+  // A little red scarf.
+  p.box(0, 0.86, 0, 1.04, 0.1, 1.04, '#ff3b5c', STYLE.SMOOTH)
+}
+MODELS.snowfox = (p) => {
+  body(p, '#f4f8ff', { belly: '#ffffff' })
+  for (const x of [-0.32, 0.32]) {
+    ear(p, x, 1.2, '#f4f8ff', 0.22, 0.34)
+    p.box(x, 1.18, 0.1, 0.1, 0.18, 0.02, '#9fd8ff', STYLE.SMOOTH)
+  }
+  eyes(p, { color: '#2a6ad8' })
+  nose(p, '#2a2a3a')
+  tail(p, '#ffffff', { y: 0.55, len: 0.55, tip: '#9fe8ff' })
+  p.box(0, 0.55, -1.05, 0.34, 0.34, 0.2, '#ffffff')
+}
+MODELS.polarbear = (p) => {
+  body(p, '#f4f6fa', { size: 1.08, belly: '#e2e8f0' })
+  for (const x of [-0.36, 0.36]) {
+    p.box(x, 1.22, 0, 0.24, 0.2, 0.2, '#f4f6fa')
+    p.box(x, 1.22, 0.1, 0.12, 0.1, 0.02, '#d8dee8', STYLE.SMOOTH)
+  }
+  eyes(p, { y: 0.7, z: 0.545 })
+  p.box(0, 0.42, 0.56, 0.36, 0.24, 0.1, '#ffffff', STYLE.SMOOTH)
+  p.box(0, 0.48, 0.62, 0.14, 0.08, 0.04, '#1c1c24', STYLE.SMOOTH)
+  // Frosty breath crystals on its back.
+  for (const x of [-0.25, 0.05, 0.3]) p.box(x, 1.2, -0.25, 0.12, 0.2, 0.12, '#9fe8ff', STYLE.GLOW, [0.3, 0, x])
+}
+MODELS.yeti = (p) => {
+  body(p, '#e8f2ff', { size: 1.12, belly: '#9fc8ff', feet: '#7aa8e0' })
+  for (const x of [-0.42, 0.42]) horn(p, x, 1.38, '#9fe8ff', 0.4)
+  eyes(p, { y: 0.78, z: 0.565, color: '#1a4ad8' })
+  // A big toothy grin.
+  p.box(0, 0.42, 0.575, 0.5, 0.14, 0.04, '#1a2a4a', STYLE.SMOOTH)
+  for (const x of [-0.14, 0.14]) p.box(x, 0.45, 0.6, 0.08, 0.08, 0.03, '#ffffff', STYLE.SMOOTH)
+  // Shaggy fur tufts and a glowing ice crown.
+  for (const [x, y] of [[-0.6, 0.7], [0.6, 0.7], [-0.6, 0.35], [0.6, 0.35]]) p.box(x, y, 0, 0.14, 0.22, 0.5, '#ffffff')
+  for (const x of [-0.25, 0, 0.25]) p.box(x, 1.32, 0, 0.12, 0.26, 0.12, '#5ae8ff', STYLE.GLOW)
+}
+
+// --- Lava Kitchen's Magma Egg -----------------------------------------------------------
+MODELS.emberpup = (p) => {
+  body(p, '#3a2420', { belly: '#ff7a1a', feet: '#2a1a16' })
+  for (const x of [-0.34, 0.34]) {
+    ear(p, x, 1.14, '#3a2420', 0.22, 0.26)
+    p.box(x, 1.2, 0, 0.1, 0.16, 0.1, '#ffb81f', STYLE.GLOW)
+  }
+  eyes(p, { color: '#ff3a1a' })
+  nose(p, '#1a0a08')
+  tail(p, '#3a2420', { y: 0.6, len: 0.36, tip: '#ff7a1a' })
+  p.box(0, 0.6, -0.9, 0.16, 0.3, 0.12, '#ffb81f', STYLE.GLOW)
+}
+MODELS.lavaturtle = (p) => {
+  body(p, '#4a3a2a', { size: 0.86, feet: '#5a4a38' })
+  // The shell: a dark dome cracked with glowing lava.
+  p.box(0, 0.98, -0.05, 1.1, 0.4, 1.1, '#2a1a14', STYLE.LAVA)
+  p.box(0, 1.24, -0.05, 0.7, 0.2, 0.7, '#3a241a', STYLE.LAVA)
+  p.box(0, 1.38, -0.05, 0.22, 0.12, 0.22, '#ffb81f', STYLE.GLOW)
+  p.box(0, 0.55, 0.55, 0.5, 0.42, 0.3, '#5a4a38')
+  eyes(p, { y: 0.6, spread: 0.14, size: 0.18, z: 0.7 })
+}
+MODELS.magmadrake = (p) => {
+  body(p, '#c8321a', { belly: '#ffb81f', feet: '#7a1a0a' })
+  for (const x of [-0.3, 0.3]) horn(p, x, 1.26, '#1a0a08', 0.3)
+  eyes(p, { color: '#ffd23a' })
+  nose(p, '#7a1a0a')
+  wings(p, '#7a1a0a', { span: 0.6, y: 0.76 })
+  for (const side of [-1, 1]) p.box(side * 0.9, 0.82, -0.05, 0.5, 0.06, 0.07, '#ff7a1a', STYLE.GLOW, [0, 0, side * 0.35])
+  tail(p, '#c8321a', { y: 0.45, len: 0.5, tip: '#ffb81f' })
+  for (const z of [-0.3, 0, 0.3]) p.box(0, 1.14, z, 0.1, 0.16, 0.12, '#ffb81f', STYLE.GLOW)
+}
+MODELS.magmaking = (p) => {
+  body(p, '#1a0e0c', { size: 1.12, belly: '#ff5a14', feet: '#140a08', style: STYLE.LAVA })
+  eyes(p, { y: 0.8, z: 0.565, color: '#ff3a1a' })
+  // A molten grin and a crown of fire.
+  p.box(0, 0.42, 0.575, 0.48, 0.12, 0.04, '#ffb81f', STYLE.GLOW)
+  p.box(0, 1.27, 0, 0.9, 0.14, 0.9, '#ffc21a', STYLE.SMOOTH)
+  for (const [x, z] of [[-0.35, 0.35], [0, 0.35], [0.35, 0.35], [-0.35, -0.35], [0.35, -0.35]]) p.box(x, 1.46, z, 0.14, 0.26, 0.14, '#ffc21a', STYLE.SMOOTH)
+  for (const x of [-0.25, 0.25]) p.box(x, 1.55, 0, 0.18, 0.3, 0.18, '#ff5a1f', STYLE.GLOW)
+  // Lava dripping down its sides.
+  for (const [x, y] of [[-0.57, 0.6], [0.57, 0.45], [-0.57, 0.95]]) p.box(x, y, 0.2, 0.06, 0.3, 0.1, '#ff7a1a', STYLE.GLOW)
+}
+
 const cache = new Map()
 
 /** Shared geometry for a pet species. */

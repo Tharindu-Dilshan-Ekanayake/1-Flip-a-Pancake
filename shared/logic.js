@@ -1,6 +1,7 @@
 import {
   AD_REWARDS,
   BADGES,
+  BUBBLE_FLIPS,
   DAILY_INTERVAL_MS,
   dayNumber,
   DAILY_REWARDS,
@@ -41,6 +42,7 @@ import {
   TUTORIAL,
   WALL_MARGIN,
   WORLD_PORTALS,
+  WORLDS,
   WORLD_ZONES,
   ZONES,
   zonesOf,
@@ -91,11 +93,17 @@ export function createProfile(id, name) {
       wallsBroken: 0,
       /** Furthest zone ever reached (index into ZONES): its `discover` prize is paid once. */
       bestZone: 0,
-      /** The same for World 2's stages. */
+      /** The same for each other world's layers. */
       bestZone2: 0,
+      bestZone3: 0,
+      bestZone4: 0,
     },
-    /** The world you're in (index into WORLDS), and whether World 2's portal is open. */
+    /**
+     * The world you're in (index into WORLDS), and the highest world opened so far (they
+     * open in order). `world2Unlocked` is kept for old saves and the template's checks.
+     */
     world: 0,
+    worldsUnlocked: 0,
     world2Unlocked: false,
     /** Secret Stars found, by world id ('world2': Palm Beach's). */
     secretStars: {},
@@ -146,10 +154,13 @@ export function normalizeProfile(raw, id, name) {
   p.ownedTires = owned.length ? owned : ['bicycle']
   if (!p.ownedTires.includes(p.equippedTire)) p.equippedTire = p.ownedTires[0]
   p.stats.bestZone = Math.min(ZONES.length - 1, Math.max(0, Math.floor(p.stats.bestZone) || 0))
-  p.stats.bestZone2 = Math.min(ZONES.length - 1, Math.max(0, Math.floor(p.stats.bestZone2) || 0))
-  p.world2Unlocked = raw.world2Unlocked === true
+  for (const key of ['bestZone2', 'bestZone3', 'bestZone4']) p.stats[key] = Math.min(ZONES.length - 1, Math.max(0, Math.floor(p.stats[key]) || 0))
+  const opened = Math.floor(Number(raw.worldsUnlocked)) || 0
+  p.worldsUnlocked = Math.min(WORLDS.length - 1, Math.max(raw.world2Unlocked === true ? 1 : 0, opened))
+  p.world2Unlocked = p.worldsUnlocked >= 1
   p.secretStars = { world2: raw.secretStars?.world2 === true }
-  p.world = p.world2Unlocked && raw.world === 1 ? 1 : 0
+  const w = Math.floor(Number(raw.world)) || 0
+  p.world = w >= 0 && w <= p.worldsUnlocked ? w : 0
   // Levels follow from Health; recompute rather than trust a stored one.
   p.level = levelFor(p.health, p.rebirths)
   // The tutorial is for brand-new players only: anyone who has rebirthed is past it.
@@ -300,6 +311,11 @@ export function applyThrow(profile, now) {
   return { ok: true, ...addHealth(profile, baseGain(profile, now)) }
 }
 
+/** A strength bubble caught on a launch: BUBBLE_FLIPS of your pan's own gain. */
+export function applyBubble(profile, now) {
+  return { ok: true, ...addHealth(profile, tidy(baseGain(profile, now) * BUBBLE_FLIPS)) }
+}
+
 /** Rebirth: +1 rebirth; Health and levels reset (Wins, tires and pets stay). */
 export function applyRebirth(profile) {
   if (!isMaxLevel(profile)) return { ok: false, error: `Reach level ${levelCap(profile.rebirths)} first!` }
@@ -411,7 +427,7 @@ export function applyRoll(profile, now, accuracy = null, bonus = 1) {
   const wins = Math.max(1, Math.round(baseRollWins(worth, world) * multiplier))
   // First time into a zone: its discovery prize, paid once ever (once in each world).
   const zone = zoneIndexAt(distance)
-  const bestKey = world === 1 ? 'bestZone2' : 'bestZone'
+  const bestKey = bestZoneKey(world)
   const discovered = []
   let prize = 0
   for (let i = profile.stats[bestKey] + 1; i <= zone; i += 1) {
@@ -518,23 +534,35 @@ export function skipRebirth(profile) {
 
 // --- Worlds -------------------------------------------------------------------------
 
+/** The stats key holding the furthest layer reached in `world`. */
+export const bestZoneKey = (world) => (world > 0 ? `bestZone${world + 1}` : 'bestZone')
+
+/** What opening world `index` asks (rebirths, and Trophies held - not spent), or null for World 1. */
+export const worldNeed = (index) => (index > 0 ? WORLD_PORTALS[WORLDS[index]?.id] ?? null : null)
+
 /**
- * Steps through the world portal: from World 1 into Palm Beach (opening it for good the
- * first time you have the rebirths and hold the Wins - they aren't spent), or from Palm
- * Beach back home.
+ * Travels through the world portal to world `target` (an index into WORLDS). A world
+ * already opened is free to go to; the next one in line opens for good the first time you
+ * have its rebirths and hold its Trophies (they aren't spent). Without a target, the
+ * template's toggle: home goes to World 2, anywhere else goes home.
  */
-export function usePortal(profile) {
-  if (profile.world === 1) {
-    profile.world = 0
-    return { ok: true, world: 0 }
+export function usePortal(profile, target) {
+  const to = Number.isInteger(target) ? target : profile.world === 0 ? 1 : 0
+  if (to < 0 || to >= WORLDS.length) return { ok: false, error: 'No such world' }
+  if (to === profile.world) return { ok: false, error: 'Already here' }
+  const opened = profile.worldsUnlocked || (profile.world2Unlocked ? 1 : 0)
+  if (to <= opened) {
+    profile.world = to
+    return { ok: true, world: to }
   }
-  const { wins: need, rebirths } = WORLD_PORTALS.world2
-  if (!profile.world2Unlocked && profile.rebirths < rebirths) return { ok: false, error: `Need ${rebirths} Rebirths`, need, rebirths }
-  if (!profile.world2Unlocked && profile.wins < need) return { ok: false, error: `Need ${need} Wins`, need, rebirths }
-  const first = !profile.world2Unlocked
+  if (to > opened + 1) return { ok: false, error: `Open ${WORLDS[opened + 1].name} first` }
+  const { wins: need, rebirths } = worldNeed(to)
+  if (profile.rebirths < rebirths) return { ok: false, error: `Need ${rebirths} Rebirths`, need, rebirths }
+  if (profile.wins < need) return { ok: false, error: `Need ${need} Trophies`, need, rebirths }
+  profile.worldsUnlocked = to
   profile.world2Unlocked = true
-  profile.world = 1
-  return { ok: true, world: 1, first }
+  profile.world = to
+  return { ok: true, world: to, first: true }
 }
 
 // --- Tires --------------------------------------------------------------------------
@@ -594,7 +622,7 @@ export function hatchEgg(profile, eggId, count = 1, { paid = 'wins', rand = Math
   const egg = EGGS[eggId]
   if (!egg) return { ok: false, error: 'Unknown egg' }
   // A world's own egg hatches in that world only (eggs from rewards included).
-  if (egg.world !== undefined && (profile.world || 0) !== egg.world) return { ok: false, error: 'Hatches in Palm Beach only!' }
+  if (egg.world !== undefined && (profile.world || 0) !== egg.world) return { ok: false, error: `Hatches in ${WORLDS[egg.world].name} only!` }
   if (profile.pets.length + count > MAX_PET_INVENTORY) return { ok: false, error: 'Pet inventory full!' }
   if (paid === 'wins') {
     if (!egg.cost.wins) return { ok: false, error: 'This egg is premium only' }

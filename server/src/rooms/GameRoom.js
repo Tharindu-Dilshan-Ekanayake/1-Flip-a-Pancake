@@ -3,7 +3,7 @@ import { Room } from '@colyseus/core'
 import { AD_REWARDS } from '../../../shared/balance.js'
 import { applyOfflineProgress } from '../../../shared/logic.js'
 import { PlayerSession } from '../../../shared/session.js'
-import { clampToWalkable, isRollReturn, MAX_MOVE_SPEED, SPAWN } from '../../../shared/world.js'
+import { clampToWalkable, isRollReturn, MAX_MOVE_SPEED, PIT, SPAWN } from '../../../shared/world.js'
 import { resolveIdentity, verifyAdReward } from '../bloxityApi.js'
 import { reportLeaver } from '../bloxityLeaderboards.js'
 import { carryOverGuest, getSphinxStock, loadProfile, saveProfile, takeSphinx } from '../db.js'
@@ -13,7 +13,7 @@ import { activePlayers, broadcastAll, liveRooms } from '../registry.js'
 import { issueSaveTicket } from '../saveTickets.js'
 import { GameState, PlayerState } from './schema.js'
 
-const MAX_CLIENTS = 8
+const MAX_CLIENTS = 12
 const RECONNECT_SECONDS = 20
 const AUTOSAVE_MS = 30_000
 /** State patches to clients, and the training simulation, per second. */
@@ -46,7 +46,7 @@ const cleanName = (name) =>
     .slice(0, 20) || 'Player'
 
 /**
- * One lobby: up to 8 players sharing a world. All game rules run in each player's
+ * One lobby: up to 12 players sharing a world. All game rules run in each player's
  * PlayerSession; the room handles networking, position validation, persistence and
  * the small shared state other players render from.
  */
@@ -331,7 +331,8 @@ export class GameRoom extends Room {
     member.lastPos = clamped
     member.lastPosAt = now
     player.x = clamped.x
-    player.y = Math.max(0, Math.min(y, 6))
+    // Down in the launch pit you stand below the plaza; jumps go up to 6 m over it.
+    player.y = Math.max(-PIT.depth - 0.5, Math.min(y, 6))
     player.z = clamped.z
     player.rotY = Number(msg.r) || 0
     player.anim = ANIMS.includes(msg.a) || (typeof msg.a === 'string' && EMOTE_ANIM.test(msg.a)) ? msg.a : 'idle'

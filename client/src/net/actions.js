@@ -24,8 +24,10 @@ export const actions = {
   roll: (accuracy) => send('roll', Number.isFinite(accuracy) ? { accuracy } : undefined),
   enterPad: (pad) => send('enterPad', { pad }),
   leavePad: () => send('leavePad'),
-  /** One throw of your phone: Skill (game/toss.js). */
+  /** One flip of your pancake: Strength (game/toss.js). */
   toss: () => send('toss'),
+  /** Strength bubble `index` caught on your launch (game/roll/skyGame.js). */
+  bubble: (index) => send('bubble', { index }),
   rebirth: () => send('rebirth'),
   skipRebirth: () => send('skipRebirth'),
   buyTire: (id) => send('buyTire', { id }),
@@ -46,7 +48,8 @@ export const actions = {
   claimQuest: (index) => send('claimQuest', { index }),
   claimQuestBonus: () => send('claimQuestBonus'),
   setSetting: (key, value) => send('setting', { key, value }),
-  portal: () => send('portal'),
+  /** Through the portal to world `world` (an index into WORLDS); the server checks it's open. */
+  portal: (world) => send('portal', Number.isInteger(world) ? { world } : undefined),
   /** Picks up Palm Beach's Secret Star (the authority checks you're at it). */
   findStar: () => send('findStar'),
   /** Buys a shop item with Wins; see shop.js. */

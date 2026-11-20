@@ -59,7 +59,7 @@ function add(name, swing, sway, twist, w) {
   b.twist += twist * w
 }
 
-/** Relaxed stance: knees soft, breathing, holding the phone up in front to look at it. */
+/** Relaxed stance: knees soft, breathing, the pan held out level in front. */
 function stance(w, time) {
   const breath = Math.sin(time * 1.8)
   add('LegL1', -0.04, 0.06 * OUT_L, 0, w)
@@ -70,9 +70,9 @@ function stance(w, time) {
   add('Neck1', 0.12, 0, 0, w)
   add('ArmL1', 0.04 + breath * 0.02, 0.1 * OUT_L, 0, w)
   add('ArmL2', -0.15, 0, 0, w)
-  // The phone held up in front, screen towards you.
-  add('ArmR1', -0.45 + breath * 0.02, 0.05 * OUT_R, 0, w)
-  add('ArmR2', -1.05, 0, 0, w)
+  // The pan out in front, its bowl level, ready to flip.
+  add('ArmR1', -0.55 + breath * 0.02, 0.05 * OUT_R, 0, w)
+  add('ArmR2', -0.95, 0, 0, w)
   pose.lift += (-0.01 + breath * 0.006) * w
 }
 
@@ -111,73 +111,75 @@ function airborne(vy) {
 }
 
 /**
- * Throwing your phone for Skill (`phase` a throw per turn): reaching back with the phone,
- * whipping it over and forward (it leaves the hand at practice.THROW_RELEASE),
- * following through, then straightening up for the next one.
+ * Flipping your pancake for Strength (`phase` one flip per turn): a little dip of the pan,
+ * a sharp flick up (the cake leaves the pan at practice.THROW_RELEASE), the pan held
+ * level under it as it spins, and a soft give as it lands back in.
  */
 function practicing(phase, w) {
   const f = ((phase / (Math.PI * 2)) % 1 + 1) % 1
-  // 0-0.4 reaching back, 0.4-0.6 the whip, 0.6-0.8 the follow-through, 0.8-1 back up.
-  const back = smooth(0, 0.4, f) * (1 - smooth(0.4, 0.6, f))
-  const whip = smooth(0.4, 0.6, f) * (1 - smooth(0.8, 1, f))
-  add('ArmR1', -0.6 - 2.6 * back - 0.9 * whip, 0.2 * OUT_R, 0, w)
-  add('ArmR2', -0.9 - 0.6 * back + 0.7 * whip, 0, 0, w)
-  add('ArmL1', -0.3 - 1.0 * back + 0.5 * whip, 0.12 * OUT_L, 0, w)
-  add('ArmL2', -0.3, 0, 0, w)
-  add('Spine1', 0.05 - 0.22 * back + 0.35 * whip, 0, -0.45 * back + 0.35 * whip, w)
-  add('Neck1', 0.05 + 0.15 * whip, 0, 0.2 * back, w)
-  add('LegL1', -0.3 * (back + whip), 0.08 * OUT_L, 0, w)
-  add('LegL2', 0.15 + 0.2 * whip, 0, 0, w)
-  add('LegR1', 0.25 * back + 0.1 * whip, 0.08 * OUT_R, 0, w)
-  add('LegR2', 0.15 + 0.25 * back, 0, 0, w)
-  pose.lift -= (0.03 + 0.04 * whip) * w
+  // 0-0.22 the dip, 0.22-0.34 the flick, 0.34-0.85 waiting under it, 0.85-1 the catch.
+  const dip = smooth(0, 0.22, f) * (1 - smooth(0.22, 0.3, f))
+  const flick = smooth(0.22, 0.3, f) * (1 - smooth(0.34, 0.6, f))
+  const catchIt = smooth(0.85, 0.93, f) * (1 - smooth(0.93, 1, f))
+  add('ArmR1', -0.55 + 0.3 * dip - 0.65 * flick + 0.18 * catchIt, 0.05 * OUT_R, 0, w)
+  add('ArmR2', -0.95 + 0.15 * dip - 0.35 * flick, 0, 0, w)
+  add('ArmL1', -0.25 - 0.4 * flick, 0.15 * OUT_L, 0, w)
+  add('ArmL2', -0.4, 0, 0, w)
+  add('Spine1', 0.05 + 0.1 * dip - 0.12 * flick, 0, 0, w)
+  // Eyes on the pancake: up as it flies, down as it lands.
+  add('Neck1', 0.1 - 0.45 * smooth(0.26, 0.5, f) * (1 - smooth(0.6, 0.9, f)), 0, 0, w)
+  add('LegL1', -0.1 - 0.15 * dip, 0.08 * OUT_L, 0, w)
+  add('LegL2', 0.15 + 0.3 * dip + 0.2 * catchIt, 0, 0, w)
+  add('LegR1', -0.1 - 0.15 * dip, 0.08 * OUT_R, 0, w)
+  add('LegR2', 0.15 + 0.3 * dip + 0.2 * catchIt, 0, 0, w)
+  pose.lift -= (0.02 + 0.07 * dip + 0.05 * catchIt) * w
+  pose.lift += 0.04 * flick * w
 }
 
 /**
- * Winding up the throw (`charge` 0-1): the phone cocked back behind your head, the other
- * arm pointing out at the hotel, leaning back on the back foot - further the more it's
- * charged. Full, it trembles (`wobble`).
+ * Charging a launch (`charge` 0-1): crouched low over the pan, both hands on it, sinking
+ * deeper the more it's charged. Full, it trembles (`wobble`).
  */
 function windingUp(charge, wobble, time, w) {
   const c = smooth(0, 1, charge)
   const shake = wobble * Math.sin(time * 40) * 0.05
-  add('Spine1', -0.1 - 0.18 * c, 0, -0.35 - 0.3 * c, w)
-  add('Neck1', 0.1, 0, 0.25 * c, w)
-  add('ArmR1', -2.6 - 0.7 * c + shake, 0.25 * OUT_R, 0, w)
-  add('ArmR2', -1.0 - 0.5 * c, 0, 0, w)
-  add('ArmL1', -1.5, 0.15 * OUT_L, 0, w)
-  add('ArmL2', -0.1, 0, 0, w)
-  add('LegL1', -0.35, 0.08 * OUT_L, 0, w)
-  add('LegL2', 0.2, 0, 0, w)
-  add('LegR1', 0.35 + 0.1 * c, 0.08 * OUT_R, 0, w)
-  add('LegR2', 0.35, 0, 0, w)
-  pose.lift -= (0.04 + 0.05 * c) * w
+  add('Spine1', 0.2 + 0.25 * c, 0, 0, w)
+  add('Neck1', -0.35 - 0.15 * c, 0, 0, w)
+  add('ArmR1', -0.4 + 0.25 * c + shake, 0.15 * OUT_R, 0, w)
+  add('ArmR2', -0.9, 0, 0, w)
+  add('ArmL1', -0.5 + 0.25 * c - shake, 0.35 * OUT_L, 0.3, w)
+  add('ArmL2', -1.1, 0, 0, w)
+  add('LegL1', -0.55 - 0.5 * c, 0.14 * OUT_L, 0, w)
+  add('LegL2', 0.9 + 0.9 * c, 0, 0, w)
+  add('LegR1', -0.55 - 0.5 * c, 0.14 * OUT_R, 0, w)
+  add('LegR2', 0.9 + 0.9 * c, 0, 0, w)
+  pose.lift -= (0.12 + 0.2 * c) * w
 }
 
 /**
- * The throw (`t` 0-1 through the swing; the phone leaves at the end): the arm whips over
- * and forward, the body turning and stepping into it, then follows through - and after,
- * you lean out over the edge watching it fall.
+ * The launch (`t` 0-1 through the heave; the pancake leaves at the end): springing up out
+ * of the crouch, the pan swung up over your head - and after, standing on tiptoe, pan
+ * still up, watching it go.
  */
 function throwing(t, time, w) {
-  // 0-0.35 cocked right back, 0.35-0.7 the whip forward, 0.7-1 the follow-through.
-  const whip = smooth(0.35, 0.7, t)
-  const follow = smooth(0.7, 1, t)
-  add('ArmR1', lerp(-3.4, -1.3, whip) + 0.6 * follow, 0.2 * OUT_R, 0, w)
-  add('ArmR2', lerp(-1.4, -0.1, whip), 0, 0, w)
-  add('ArmL1', lerp(-1.5, 0.35, whip), 0.15 * OUT_L, 0, w)
-  add('Spine1', lerp(-0.28, 0.4, whip), 0, lerp(-0.6, 0.45, whip), w)
-  add('Neck1', lerp(0.1, -0.1, whip) + 0.3 * follow, 0, 0, w)
-  add('LegL1', lerp(-0.35, -0.55, whip), 0.08 * OUT_L, 0, w)
-  add('LegL2', 0.3, 0, 0, w)
-  add('LegR1', lerp(0.45, 0.3, whip), 0.08 * OUT_R, 0, w)
-  add('LegR2', lerp(0.35, 0.6, whip), 0, 0, w)
-  pose.lift -= 0.07 * w
-  // Done: leaning out over the edge, watching it go.
+  const spring = smooth(0.1, 0.8, t)
+  const crouch = 1 - smooth(0, 0.45, t)
+  add('ArmR1', lerp(-0.2, -3.0, spring), 0.12 * OUT_R, 0, w)
+  add('ArmR2', lerp(-0.9, -0.2, spring), 0, 0, w)
+  add('ArmL1', lerp(-0.3, -2.7, spring), 0.3 * OUT_L, 0, w)
+  add('ArmL2', -0.3, 0, 0, w)
+  add('Spine1', lerp(0.45, -0.18, spring), 0, 0, w)
+  add('Neck1', lerp(-0.4, -0.75, spring), 0, 0, w)
+  add('LegL1', -1.05 * crouch, 0.12 * OUT_L, 0, w)
+  add('LegL2', 1.8 * crouch, 0, 0, w)
+  add('LegR1', -1.05 * crouch, 0.12 * OUT_R, 0, w)
+  add('LegR2', 1.8 * crouch, 0, 0, w)
+  pose.lift += (-0.32 * crouch + 0.1 * spring * (1 - smooth(0.8, 1, t))) * w
+  // Done: watching it climb, swaying a little.
   if (t >= 1) {
     const sway = Math.sin(time * 2) * 0.03
-    add('Spine1', 0.1 + sway, 0, 0, w)
-    add('Neck1', 0.4, 0, 0, w)
+    add('Spine1', sway, 0, 0, w)
+    add('Neck1', -0.1, 0, 0, w)
   }
 }
 

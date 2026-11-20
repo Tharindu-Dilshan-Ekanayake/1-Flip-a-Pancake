@@ -681,7 +681,7 @@ export const sfx = {
     tone(120, { duration: 0.16, volume: 0.1, slideTo: 55 })
     tone(140, { at: 0.22, duration: 0.12, volume: 0.05, slideTo: 70 })
   },
-  /** Flinging the phone off the edge (`power` 0-1, how good the throw): a whip of air and a rising whoosh. */
+  /** Launching the pancake straight up (`power` 0-1, how good the launch): a whip of air and a rising whoosh. */
   throwPhone(power = 1) {
     if (!ready('throwPhone', 250)) return
     noise({ duration: 0.08, volume: 0.22, from: 3000, to: 1200, q: 1 })
@@ -739,18 +739,50 @@ export const sfx = {
     tone(210, { type: 'square', duration: 0.05, volume: 0.06 * v, slideTo: 120 })
     noise({ duration: 0.05, volume: 0.09 * v, from: 2600, to: 900, q: 1.1 })
   },
-  /** A practice throw leaving your hand on a throw pad: a quick, light whoosh. */
+  /** A pancake flipped up out of the pan: a quick, light whoosh. */
   practiceThrow() {
     if (!ready('practiceThrow', 200)) return
     noise({ duration: 0.18, volume: 0.07, from: 600, to: 2400, q: 0.8 })
     tone(420, { type: 'triangle', duration: 0.12, volume: 0.03, slideTo: 880 })
   },
-  /** A practice phone landing on its target: a plasticky clack and a tiny bounce. */
+  /** A flipped pancake landing back in the pan: a soft, buttery plop and a tiny sizzle. */
   practiceLand() {
     if (!ready('practiceLand', 90)) return
-    tone(260, { type: 'square', duration: 0.05, volume: 0.05, slideTo: 140 })
-    noise({ duration: 0.06, volume: 0.08, from: 2400, to: 900, q: 1.2 })
-    tone(520, { type: 'triangle', at: 0.12, duration: 0.04, volume: 0.025, slideTo: 300 })
+    tone(180, { type: 'sine', duration: 0.09, volume: 0.07, slideTo: 90 })
+    noise({ duration: 0.07, volume: 0.06, from: 900, to: 300, q: 1.4 })
+    if (!lite()) noise({ at: 0.05, duration: 0.25, volume: 0.025, from: 5000, to: 3500, q: 0.4 })
+  },
+  /**
+   * A strength bubble popping on your pancake (`streak`: how many in a row): a wet pop and a
+   * sparkle that climbs a note with every bubble in the run.
+   */
+  bubblePop(streak = 1) {
+    if (!ready('bubblePop', 60)) return
+    tone(900, { type: 'sine', duration: 0.07, volume: 0.09, slideTo: 1800 })
+    noise({ duration: 0.04, volume: 0.07, from: 3000, to: 1500, q: 1 })
+    const step = Math.min(Math.max(0, streak - 1), 14)
+    const scale = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28, 31, 33]
+    bell(660 * Math.pow(2, scale[step] / 12), { at: 0.03, volume: 0.05, decay: 0.25 })
+  },
+  /** Bumping into a grumpy cloud: a soft thud, a puff and a grumble. */
+  cloudBonk() {
+    if (!ready('cloudBonk', 200)) return
+    tone(140, { duration: 0.25, volume: 0.2, slideTo: 60 })
+    noise({ duration: 0.3, volume: 0.14, from: 700, to: 200, q: 0.6 })
+    tone(110, { type: 'sawtooth', at: 0.12, duration: 0.3, volume: 0.04, slideTo: 80 })
+  },
+  /** Flying into a new world of the sky: a rising shimmer and a big bright chord. */
+  worldEnter() {
+    if (!ready('worldEnter', 600)) return
+    noise({ duration: 0.9, volume: 0.08, from: 800, to: 6000, q: 0.6 })
+    for (const [i, f] of [392, 523, 659, 784, 1047, 1319].entries()) bell(f, { at: 0.05 + i * 0.06, volume: 0.06, decay: 0.7 })
+    tone(196, { type: 'triangle', at: 0.05, duration: 0.6, volume: 0.08 })
+  },
+  /** The pancake reaching the top of its launch: a bright chime and the crowd. */
+  topReached(power = 1) {
+    if (!ready('topReached', 400)) return
+    liveCrowd()?.roar(0.4 + 0.5 * power)
+    for (const [i, f] of [523, 659, 784, 1047].entries()) bell(f, { at: i * 0.07, volume: 0.06, decay: 0.4 })
   },
   windStart,
   windSet,

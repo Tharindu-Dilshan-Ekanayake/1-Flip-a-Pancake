@@ -9,7 +9,7 @@ import { getQuality } from '../../store/quality'
 import { emoteFromAnim } from '../../bloxity/emotes'
 import { asToyInstance } from '../blocks'
 import { handPhoneGeometry } from '../handPhone'
-import { releasePoint, spawnThrow, THROW_RELEASE, tossTarget } from '../practice'
+import { pancakeUp, releasePoint, spawnThrow, THROW_RELEASE, tossTarget } from '../practice'
 import { sharedMaterials } from '../materials'
 import { BloxityAvatar } from '../PlayerAvatar'
 
@@ -53,10 +53,12 @@ function RemoteAvatar({ sessionId, look }) {
     m.windup = 0
     m.wobble = 0
     m.throwT = 0
-    const geometry = handPhoneGeometry(r.tireId || 'bicycle')
+    const tossingNow = r.tossF >= 0 && r.tossF < 1
+    // Their pan stays in their hand, empty while its pancake is in the air.
+    const inPan = !(r.flying && r.throwT >= 1) && !(tossingNow && pancakeUp(r.tossF))
+    const geometry = handPhoneGeometry(r.tireId || 'bicycle', inPan)
     const held = phoneRef.current
     if (held && held.geometry !== geometry) held.geometry = geometry
-    if (handRef.current) handRef.current.visible = !(r.flying && r.throwT >= 1)
 
     inner.position.set(0, 0, 0)
     inner.quaternion.identity()
@@ -92,7 +94,6 @@ function RemoteAvatar({ sessionId, look }) {
         spawnThrow(_hand.x, _hand.y, _hand.z, _target.x, _target.z, r.tireId || 'bicycle', _target.y)
       }
       m.stride = r.tossF * Math.PI * 2
-      if (handRef.current && r.tossF >= THROW_RELEASE) handRef.current.visible = false
     } else {
       m.stride += delta * (5 + 6 * Math.min(1, speed / MAX_SPEED))
     }

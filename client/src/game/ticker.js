@@ -1,5 +1,5 @@
 import { isPadUnlocked } from '@shared/logic'
-import { eggStandNear, FREE_REWARD, inRollZone, PAD_COUNT, padAt, padRect, portalAt, SPHINX_STAND, standAt, STAR } from '@shared/world'
+import { eggAt, eggStandNear, FREE_REWARD, inRollZone, PAD_COUNT, padAt, padRect, portalAt, SPHINX_STAND, standAt, STAR } from '@shared/world'
 
 import { sfx } from '../audio/sfx'
 import { actions } from '../net/actions'
@@ -73,7 +73,7 @@ export function startGameTicker() {
       // In the DROP ZONE: the DROP button shows (the template's name).
       atPosts: inRollZone(p.x, p.z),
       stand: standAt(p.x, p.z),
-      egg: egg ? egg.eggId : null,
+      egg: eggAt(egg, getGame().profile.world || 0),
       portal: portalAt(p.x, p.z)?.id ?? null,
       freeReward: Math.hypot(p.x - FREE_REWARD.x, p.z - FREE_REWARD.z) < FREE_REWARD.radius,
     }
@@ -87,7 +87,8 @@ export function startGameTicker() {
       }
     }
     if (!sameZone(zone, game.zone)) {
-      if (zone.portal && zone.portal !== game.zone.portal) actions.portal()
+      // Walking into the portal opens the world picker (WorldsPanel).
+      if (zone.portal && zone.portal !== game.zone.portal && !game.panel) game.openPanel('worlds')
       game.setZone(zone)
     }
     if (zone.pad !== lastPad) {

@@ -12,17 +12,16 @@ const _q = new Quaternion()
 const _qa = new Quaternion()
 const _ax = new Vector3(1, 0, 0)
 const _ay = new Vector3(0, 1, 0)
-/** Half a practice phone's thickness at its scale: lying flat, its middle is this far up. */
-const LIE = 0.08
-/** How high a practice throw arcs over the lane. */
-const ARC = 2.2
+/** Half a pancake's thickness at its scale: lying flat, its middle is this far up. */
+const LIE = 0.05
+/** How high a flip sends the pancake. */
+const ARC = 1.7
 /** Throws landing further than this from the camera aren't heard. */
 const HEAR = 30
 
 /**
- * The phones in flight off the throw pads (practice.js): each tumbles end over end in an
- * arc down its lane, slaps down on the target with a little bounce, lies there a moment
- * and shrinks away. A fixed pool of MAX_THROWS meshes, each showing whichever phone was
+ * The pancakes flipped up out of their pans (practice.js): each spins up end over end
+ * and drops straight back into the pan. A fixed pool of MAX_THROWS meshes, each showing whichever phone was
  * thrown; only the ones in flight are drawn (one draw call each, and rarely more than two
  * or three at once). Nothing allocated while it runs.
  */
@@ -55,6 +54,9 @@ export default function PracticeThrows() {
       }
       const e = (now - t.start) / 1000
       if (e >= THROW_FLIGHT + THROW_LIE + THROW_FADE) {
+        // Back in the pan: a soft plop (the pan shows it again, HeldPhone).
+        if (!t.landed && state.camera.position.distanceTo(t.to) < HEAR) sfx.practiceLand()
+        t.landed = true
         t.active = false
         mesh.visible = false
         continue
@@ -68,8 +70,9 @@ export default function PracticeThrows() {
         const u = e / THROW_FLIGHT
         mesh.position.lerpVectors(t.from, t.to, u)
         mesh.position.y += ARC * 4 * u * (1 - u) + LIE * u
+        // One full flip end over end (a double on every third), turning a little as it goes.
         _q.setFromAxisAngle(_ay, Math.PI / 2 + t.turn * u)
-        _q.multiply(_qa.setFromAxisAngle(_ax, t.spin * Math.PI * 4 * u))
+        _q.multiply(_qa.setFromAxisAngle(_ax, t.spin * Math.PI * 2 * (Math.abs(t.turn) > 0.55 ? 2 : 1) * u))
       } else {
         // Down on the target: a bounce, then lying still until it shrinks away.
         if (!t.landed) {

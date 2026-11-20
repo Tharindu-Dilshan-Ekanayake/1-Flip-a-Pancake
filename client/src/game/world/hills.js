@@ -1,5 +1,5 @@
 import { hash2 } from '@shared/rng'
-import { CANYON_HALF_WIDTH, PLAZA } from '@shared/world'
+import { PLAZA } from '@shared/world'
 
 import { STYLE } from '../materials'
 import { SCOREBOARD } from './terrain'
@@ -21,9 +21,7 @@ import { SCOREBOARD } from './terrain'
  */
 
 /** The open ground the mesas keep clear of: the plaza and everything round its edge. */
-const OPEN = { minX: PLAZA.minX - 4, maxX: PLAZA.maxX + 4, minZ: PLAZA.minZ, maxZ: PLAZA.maxZ + 4 }
-/** The runway's valley floor, north of the plaza, left open for it. */
-const VALLEY_HALF = CANYON_HALF_WIDTH + 6
+const OPEN = { minX: PLAZA.minX - 4, maxX: PLAZA.maxX + 4, minZ: PLAZA.minZ - 4, maxZ: PLAZA.maxZ + 4 }
 /** How far out the mesas go, from the middle. */
 const REACH = { x: 96, south: PLAZA.maxZ + 112, north: -104 }
 
@@ -31,14 +29,17 @@ const CANDY = ['#ff5fa8', '#ffd21f', '#4be0c0', '#b05cff', '#ff8a3a', '#5fb8ff']
 /** Rooftop clutter on the towers round Sky City. */
 const ROOF = { steel: '#c9d2de', dark: '#3a3f4a', tank: '#c98f52', lawn: '#5fdc4a', leaves: ['#3fbf5a', '#7fe03a'], light: '#ff3b3b' }
 const PALM = { trunk: '#b4884f', leaves: ['#3fbf5a', '#54d36a'] }
+/** Ledge decor in the stone canyon. */
+const STONE = { pine: ['#2f8a3a', '#3fa84a'], boulder: ['#8a8476', '#a39c8c'], crystal: ['#7fe8ff', '#ff8ae0', '#b48aff'] }
+/** Ledge decor in Frosty Peaks and Lava Kitchen. */
+const SNOW = { pine: ['#2f6a4a', '#3a7a56'], snow: '#ffffff', ice: ['#9fe8ff', '#cff4ff', '#7fc8ff'], carrot: '#ff8a1f' }
+const LAVA = { rock: ['#2a201c', '#3a2c26'], glow: ['#ff5a1f', '#ffb81f', '#ff2a1a'], obsidian: '#140c14' }
 
-/** Metres from (x, z) to the nearest open ground (the plaza, or the runway's valley). */
+/** Metres from (x, z) to the plaza: the cliffs close it in on every side. */
 function openDistance(x, z) {
   const dx = Math.max(OPEN.minX - x, 0, x - OPEN.maxX)
   const dz = Math.max(OPEN.minZ - z, 0, z - OPEN.maxZ)
-  const plaza = Math.hypot(dx, dz)
-  const valley = z < OPEN.minZ ? Math.max(0, Math.abs(x) - VALLEY_HALF) : Infinity
-  return Math.min(plaza, valley)
+  return Math.hypot(dx, dz)
 }
 
 /** Under the scoreboard on the south mesas: kept below its screen. */
@@ -46,7 +47,7 @@ const underScoreboard = (x, z) =>
   Math.abs(x - SCOREBOARD.x) < SCOREBOARD.width / 2 + 3 && Math.abs(z - SCOREBOARD.z) < 4
 
 /**
- * Something growing on a terrace at (x, top, z): a giant lollipop (a white stick, a candy
+ * Something growing on a terrace at (x, top, z): a giant lollipop (a lemon stick, a candy
  * disc striped white, turned to face a random way), a stack of gumdrops, or a palm.
  */
 function addDecor(blocks, x, top, z, k, kind) {
@@ -77,6 +78,89 @@ function addDecor(blocks, x, top, z, k, kind) {
     }
     return
   }
+  if (kind === 'stone') {
+    const pick = hash2(k, 31)
+    if (pick < 0.4) {
+      // A pine tree on the ledge.
+      const h = 1.4 + hash2(k, 32) * 1.2
+      blocks.addOn(x, top, z, 0.6, h, 0.6, '#7a4e2a', STYLE.SMOOTH)
+      blocks.addOn(x, top + h, z, 3.2, 1.4, 3.2, STONE.pine[0], STYLE.STUDS)
+      blocks.addOn(x, top + h + 1.4, z, 2.2, 1.4, 2.2, STONE.pine[1], STYLE.STUDS)
+      blocks.addOn(x, top + h + 2.8, z, 1.1, 1.2, 1.1, STONE.pine[0], STYLE.STUDS)
+    } else if (pick < 0.7) {
+      // A pile of boulders.
+      blocks.addOn(x, top, z, 2.6, 1.6, 2.2, STONE.boulder[0], STYLE.HILL, hash2(k, 36) * 3)
+      blocks.addOn(x + 0.9, top, z + 0.8, 1.4, 1, 1.4, STONE.boulder[1], STYLE.STUDS, hash2(k, 37) * 3)
+    } else if (pick < 0.85) {
+      // A torch: a stone post with a fire burning on top.
+      blocks.addOn(x, top, z, 0.8, 2.4, 0.8, STONE.boulder[1], STYLE.STUDS)
+      blocks.addOn(x, top + 2.4, z, 1.2, 0.4, 1.2, '#4a3a2a', STYLE.SMOOTH)
+      blocks.add(x, top + 3.2, z, 0.8, 1, 0.8, '#ff9a1f', STYLE.GLOW, Math.PI / 4)
+      blocks.add(x, top + 3.6, z, 0.4, 0.7, 0.4, '#ffe27a', STYLE.GLOW, Math.PI / 4)
+    } else {
+      // Glowing crystals poking out of the rock.
+      const shards = [
+        [0, 2.4, 0],
+        [0.7, 1.5, 1],
+        [-0.6, 1.2, 2],
+      ]
+      for (const [dx, h, c] of shards) blocks.add(x + dx, top + h / 2, z, 0.6, h, 0.6, STONE.crystal[c], STYLE.GLOW, 0.5, 0, dx * 0.4)
+    }
+    return
+  }
+  if (kind === 'snow') {
+    const pick = hash2(k, 31)
+    if (pick < 0.45) {
+      // A snowy pine: three tiers, each capped with snow.
+      const h = 1.2 + hash2(k, 32) * 1
+      blocks.addOn(x, top, z, 0.6, h, 0.6, '#5a3a22', STYLE.SMOOTH)
+      for (const [w, dy] of [[3.2, 0], [2.3, 1.3], [1.3, 2.6]]) {
+        blocks.addOn(x, top + h + dy, z, w, 1.1, w, SNOW.pine[Math.floor(hash2(k, 35) * 2)], STYLE.STUDS)
+        blocks.addOn(x, top + h + dy + 1.1, z, w * 0.85, 0.25, w * 0.85, SNOW.snow, STYLE.SMOOTH)
+      }
+    } else if (pick < 0.65) {
+      // A snowman with a carrot nose and a stone hat.
+      blocks.addOn(x, top, z, 1.8, 1.6, 1.8, SNOW.snow, STYLE.SMOOTH)
+      blocks.addOn(x, top + 1.6, z, 1.3, 1.2, 1.3, SNOW.snow, STYLE.SMOOTH)
+      blocks.addOn(x, top + 2.8, z, 0.9, 0.9, 0.9, SNOW.snow, STYLE.SMOOTH)
+      blocks.add(x, top + 3.2, z + 0.6, 0.15, 0.15, 0.6, SNOW.carrot, STYLE.SMOOTH)
+      blocks.addOn(x, top + 3.7, z, 1.1, 0.15, 1.1, '#2a2a30', STYLE.SMOOTH)
+      blocks.addOn(x, top + 3.85, z, 0.7, 0.6, 0.7, '#2a2a30', STYLE.SMOOTH)
+    } else {
+      // A cluster of glowing ice crystals.
+      const shards = [
+        [0, 2.8, 0],
+        [0.8, 1.8, 1],
+        [-0.7, 1.4, 2],
+        [0.2, 1.2, 1],
+      ]
+      for (const [dx, h, c] of shards) blocks.add(x + dx, top + h / 2, z + dx * 0.4, 0.7, h, 0.7, SNOW.ice[c], STYLE.GLOW, 0.4, 0, dx * 0.35)
+    }
+    return
+  }
+  if (kind === 'lava') {
+    const pick = hash2(k, 31)
+    if (pick < 0.4) {
+      // Obsidian spikes.
+      const spikes = [
+        [0, 3.2, 0],
+        [0.8, 2, 0.3],
+        [-0.7, 1.6, -0.2],
+      ]
+      for (const [dx, h, tilt] of spikes) blocks.add(x + dx, top + h / 2, z, 0.8, h, 0.8, LAVA.obsidian, STYLE.SMOOTH, 0.7, tilt, dx * 0.3)
+    } else if (pick < 0.7) {
+      // A fire brazier: a black bowl on a post, flames leaping out of it.
+      blocks.addOn(x, top, z, 0.7, 1.8, 0.7, LAVA.rock[1], STYLE.SMOOTH)
+      blocks.addOn(x, top + 1.8, z, 1.6, 0.5, 1.6, '#1a1210', STYLE.SMOOTH)
+      blocks.add(x, top + 2.7, z, 1, 1.2, 1, LAVA.glow[0], STYLE.GLOW, Math.PI / 4)
+      blocks.add(x, top + 3.1, z, 0.5, 0.9, 0.5, LAVA.glow[1], STYLE.GLOW, Math.PI / 4)
+    } else {
+      // A boulder of cooling lava, cracked and glowing.
+      blocks.addOn(x, top, z, 2.6, 1.6, 2.2, LAVA.rock[0], STYLE.LAVA, hash2(k, 36) * 3)
+      blocks.addOn(x + 0.9, top, z + 0.8, 1.2, 0.9, 1.2, LAVA.rock[1], STYLE.LAVA, hash2(k, 37) * 3)
+    }
+    return
+  }
   if (kind === 'palm') {
     const h = 4 + hash2(k, 32) * 2.5
     blocks.addOn(x, top, z, 0.7, h, 0.7, PALM.trunk, STYLE.STRIPES)
@@ -87,12 +171,12 @@ function addDecor(blocks, x, top, z, k, kind) {
   const color = CANDY[Math.floor(hash2(k, 35) * CANDY.length)]
   if (hash2(k, 31) < 0.55) {
     const h = 3.6 + hash2(k, 32) * 2.4
-    blocks.addOn(x, top, z, 0.35, h, 0.35, '#ffffff', STYLE.SMOOTH)
+    blocks.addOn(x, top, z, 0.35, h, 0.35, '#ffe27a', STYLE.SMOOTH)
     blocks.add(x, top + h + 1.4, z, 3, 3, 0.7, color, STYLE.STRIPES, 0, hash2(k, 36) * Math.PI, Math.PI / 4)
   } else {
     blocks.addOn(x, top, z, 3.2, 1.6, 3.2, color, STYLE.STUDS)
     blocks.addOn(x, top + 1.6, z, 2.2, 1.2, 2.2, CANDY[(CANDY.indexOf(color) + 2) % CANDY.length], STYLE.STUDS)
-    blocks.addOn(x, top + 2.8, z, 1.1, 0.8, 1.1, '#ffffff', STYLE.STUDS)
+    blocks.addOn(x, top + 2.8, z, 1.1, 0.8, 1.1, '#ff6aa8', STYLE.STUDS)
   }
 }
 

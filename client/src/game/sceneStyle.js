@@ -12,8 +12,9 @@
  */
 
 /** Style ids (materials STYLE; numbers here so this file stays import-free): glass towers, green-capped cliffs. */
-const STYLE_WINDOWS = 2
 const STYLE_HILL = 14
+const STYLE_MESA = 15
+const STYLE_LAVA = 7
 
 /** The home team's colours: everything built for the venue uses these. */
 export const TEAM = {
@@ -75,11 +76,14 @@ export const PALETTE = {
  */
 export const VENUES = [
   {
+    // World 1, the Candy Palace: a blocky candy castle in a valley of candy mountains.
     beach: false,
-    primary: '#ff7a1a',
-    dark: '#16233f',
+    candy: true,
+    park: 'candy',
+    primary: '#ff6aa8',
+    dark: '#7a2a6a',
     light: TEAM.white,
-    accent: '#2fc6ff',
+    accent: '#ffd23a',
     concrete: PALETTE.concrete,
     wall: '#c4c9d2',
     vip: '#d5dae1',
@@ -90,18 +94,18 @@ export const VENUES = [
     /** Beyond the turf round the plaza (grass, under the hills), and the turf strip itself. */
     surround: '#3fb23f',
     strip: PALETTE.turf,
-    shopFloor: PALETTE.shopFloor,
-    logo: { rim: '#2fc6ff', ring: '#16233f', inner: '#ff7a1a', top: 'SKY', bottom: 'CITY' },
+    shopFloor: '#c8aaff',
+    logo: { rim: '#ffd23a', ring: '#ff6aa8', inner: '#9ef0d0', top: 'CANDY', bottom: 'PALACE' },
     /**
-     * The skyline round the lobby: glass towers in building-sized blocks of colour
-     * (`mixed`), their windows lit, with antennas, air conditioners, water tanks and
-     * little gardens on their roofs.
+     * The stone canyon's walls: grey and warm stone cliffs stepping up in terraces, mossy
+     * on top, with pines, boulders, torches and glowing crystals on their ledges.
      */
-    hills: { rock: ['#8fc4ff', '#f4f7fb', '#5fa8f0', '#bfe6ff', '#ffb37a', '#3f7fd8'], style: STYLE_WINDOWS, mixed: true, trees: 'roof' },
-    endNorth: 'DROP IT!',
+    // Candy mountains beyond the castle walls: pastel strata under a frosting cap, lollipops and gumdrops on the ledges.
+    hills: { rock: ['#ffb3d1', '#ffd6a5', '#caffbf', '#bde0fe', '#e0bbff'], style: STYLE_MESA, trees: 'candy' },
+    endNorth: 'LAUNCH IT!',
     /** The start arch and the ball shop's stages and sign. */
-    arch: { pillar: '#ff7a1a', base: '#16233f', glow: '#bff6ff', crest: '#2fc6ff' },
-    shop: { band: '#2fc6ff', strip: '#bff6ff', post: '#ff7a1a', panel: '#16233f' },
+    arch: { pillar: '#ff6aa8', base: '#7a2a6a', glow: '#ffe27a', crest: '#ffd23a' },
+    shop: { band: '#ff6aa8', strip: '#ffe27a', post: '#9ef0d0', panel: '#7a2a6a' },
   },
   {
     beach: true,
@@ -119,11 +123,61 @@ export const VENUES = [
     surround: '#f2dca0',
     strip: ['#f2dca0', '#ead196'],
     shopFloor: '#fbeed0',
-    logo: { rim: '#16b8c4', ring: '#ff6f61', inner: '#ffd27a', top: 'PALM BEACH', bottom: 'RESORT' },
+    logo: { rim: '#16b8c4', ring: '#ff6f61', inner: '#ffd27a', top: 'TROPIC', bottom: 'SKIES' },
     hills: { rock: ['#e8c890', '#dcb27a', '#cf9c5e', '#c08a4e', '#b07a42'], style: STYLE_HILL, trees: 'palm' },
-    endNorth: 'PALM BEACH',
+    endNorth: 'TROPIC SKIES',
     arch: { pillar: '#ff6f61', base: '#0b6f86', glow: '#ffe6b8', crest: '#16b8c4' },
     shop: { band: '#16b8c4', strip: '#bff6ff', post: '#ff6f61', panel: '#0b6f86' },
+  },
+  {
+    // World 3, Frosty Peaks: blue-grey cliffs capped with snow, ice-blue paving, snowy
+    // pines, snowmen and ice crystals.
+    beach: false,
+    park: 'snow',
+    primary: '#3a8aff',
+    dark: '#1a3a7a',
+    light: '#ffffff',
+    accent: '#9fe8ff',
+    concrete: ['#e8f2fb', '#e8f2fb', '#d8e6f4'],
+    wall: '#d8e6f4',
+    vip: '#eef6ff',
+    glass: '#1a3a7a',
+    crowd: ['#3a8aff', '#ffffff', '#9fe8ff', '#ffd27a'],
+    flags: ['#3a8aff', '#ffffff', '#9fe8ff'],
+    pitch: { north: '#3a8aff', south: '#1a3a7a', border: '#ffffff', track: '#9fe8ff', apron: '#d8e6f4' },
+    surround: '#eef6ff',
+    strip: ['#eef6ff', '#e0ecf8'],
+    shopFloor: '#f4f9ff',
+    logo: { rim: '#9fe8ff', ring: '#1a3a7a', inner: '#3a8aff', top: 'FROSTY', bottom: 'PEAKS' },
+    hills: { rock: ['#a8b8cc', '#98a8bf', '#8898b0', '#7a8aa4', '#6c7c98'], style: STYLE_MESA, trees: 'snow' },
+    endNorth: 'FROSTY PEAKS',
+    arch: { pillar: '#3a8aff', base: '#1a3a7a', glow: '#e0f8ff', crest: '#9fe8ff' },
+    shop: { band: '#3a8aff', strip: '#e0f8ff', post: '#9fe8ff', panel: '#1a3a7a' },
+  },
+  {
+    // World 4, Lava Kitchen: black volcanic cliffs cracked with glowing lava, dark basalt
+    // paving with a glowing path, obsidian spikes and fires.
+    beach: false,
+    park: 'lava',
+    primary: '#ff5a1f',
+    dark: '#1a0a08',
+    light: '#ffd27a',
+    accent: '#ff9a1f',
+    concrete: ['#3a2f2c', '#3a2f2c', '#2e2422'],
+    wall: '#3a2f2c',
+    vip: '#4a3c38',
+    glass: '#1a0a08',
+    crowd: ['#ff5a1f', '#ffd27a', '#ff9a1f', '#ffffff'],
+    flags: ['#ff5a1f', '#1a0a08', '#ffd27a'],
+    pitch: { north: '#ff5a1f', south: '#1a0a08', border: '#ffd27a', track: '#3a2f2c', apron: '#2e2422' },
+    surround: '#2e2422',
+    strip: ['#2e2422', '#352a27'],
+    shopFloor: '#4a3c38',
+    logo: { rim: '#ff9a1f', ring: '#1a0a08', inner: '#ff5a1f', top: 'LAVA', bottom: 'KITCHEN' },
+    hills: { rock: ['#3a302c', '#2f2724', '#28201d', '#221a18', '#1c1513'], style: STYLE_LAVA, trees: 'lava' },
+    endNorth: 'LAVA KITCHEN',
+    arch: { pillar: '#ff5a1f', base: '#1a0a08', glow: '#ffd27a', crest: '#ff9a1f' },
+    shop: { band: '#ff5a1f', strip: '#ffd27a', post: '#ff9a1f', panel: '#1a0a08' },
   },
 ]
 export const venueOf = (world) => VENUES[world] ?? VENUES[0]

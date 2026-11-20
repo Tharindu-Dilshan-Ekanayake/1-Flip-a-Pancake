@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { PADS, SHOP, TIRES, WORLD_PORTALS, WORLDS } from '@shared/balance'
+import { PADS, SHOP, TIRES, WORLDS } from '@shared/balance'
 import { formatNumber } from '@shared/format'
 import { isPadUnlocked } from '@shared/logic'
 
@@ -24,31 +24,23 @@ function usePrompt() {
   const padLocked = useGame((s) => s.zone.padNear >= 0 && !isPadUnlocked(s.profile, s.zone.padNear))
   const atSphinx = useGame((s) => s.zone.sphinx)
   const atPortal = useGame((s) => s.zone.portal)
-  const wins = useGame((s) => s.profile.wins)
-  const rebirths = useGame((s) => s.profile.rebirths)
   const inWorld = useGame((s) => s.profile.world)
-  const unlocked = useGame((s) => s.profile.world2Unlocked)
+  const openPanel = useGame((s) => s.openPanel)
 
-  // Walking into the portal takes you through (ticker.js); this says where to.
+  // Walking into the portal opens the world picker (ticker.js); this reopens it.
   if (atPortal) {
-    const world = WORLD_PORTALS[atPortal]
-    if (inWorld === 1) return { title: WORLDS[0].name, action: 'Step out and back in to go home', run: null }
-    if (unlocked || (rebirths >= world.rebirths && wins >= world.wins)) {
-      return { title: world.name, action: `x${WORLDS[1].wins} Wins on every drop!`, run: null }
-    }
-    if (rebirths < world.rebirths) return { title: world.name, action: `Needs ${world.rebirths} Rebirths (you have ${rebirths})`, run: null }
-    return { title: world.name, action: `Needs ${formatNumber(world.wins)} Wins (you have ${formatNumber(wins)})`, run: null }
+    return { title: `World Portal - ${WORLDS[inWorld]?.name ?? ''}`, action: 'Choose a world', run: () => openPanel('worlds') }
   }
 
   if (atSphinx) {
-    return { title: 'Sphinx - Limited!', action: `Buy - ${formatNumber(SHOP.sphinx.price)} Wins`, run: () => buy('sphinx') }
+    return { title: 'Sphinx - Limited!', action: `Buy - ${formatNumber(SHOP.sphinx.price)} Trophies`, run: () => buy('sphinx') }
   }
 
   if (padLocked) {
     const pad = PADS[padNear]
-    const title = `${pad.name} - ${formatNumber(pad.mult)}x Skill`
+    const title = `${pad.name} - ${formatNumber(pad.mult)}x Strength`
     if (pad.product) {
-      return { title, action: `Unlock - ${formatNumber(SHOP[pad.product].price)} Wins`, run: () => buy(pad.product) }
+      return { title, action: `Unlock - ${formatNumber(SHOP[pad.product].price)} Trophies`, run: () => buy(pad.product) }
     }
     if (pad.world !== undefined && (inWorld || 0) !== pad.world) {
       return { title, action: `Works in ${WORLDS[pad.world].name} only - go through the portal!`, run: null }
@@ -65,12 +57,12 @@ function usePrompt() {
 
   if (stand >= 0) {
     const tire = TIRES[stand]
-    const title = `${tire.name} - +${formatNumber(tire.power)} Skill`
+    const title = `${tire.name} - +${formatNumber(tire.power)} Strength`
     const state = standState({ ownedTires: owned, equippedTire: equipped }, stand)
     if (state === 'equipped') return { title, action: 'Equipped', run: null }
     if (state === 'owned') return { title, action: 'Equip', run: () => actions.equipTire(tire.id) }
     if (state === 'locked') return { title, action: `Buy the ${TIRES[stand - 1].name} first`, run: null }
-    return { title, action: `Buy - ${formatNumber(tire.cost)} Wins`, run: () => actions.buyTire(tire.id) }
+    return { title, action: `Buy - ${formatNumber(tire.cost)} Trophies`, run: () => actions.buyTire(tire.id) }
   }
   return null
 }

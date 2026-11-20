@@ -589,3 +589,83 @@ canvas {
     transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1) rotate(220deg);
   }
 }
+
+/* The steering hint while the pancake climbs: in at once, gone after a few seconds. */
+.pp-steer-hint {
+  animation: pp-steer-hint 4.2s ease-out forwards;
+}
+@keyframes pp-steer-hint {
+  0%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-steer-hint {
+    animation: none;
+  }
+}
+
+/* The world banner: hidden until a new world, then it zooms in, holds and floats away. */
+.pp-world {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.6);
+  pointer-events: none;
+}
+.pp-world.pp-world-on {
+  animation: pp-world 2.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+}
+@keyframes pp-world {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.4) rotate(-6deg);
+  }
+  14% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.12) rotate(-3deg);
+  }
+  24% {
+    transform: translateX(-50%) scale(1) rotate(-3deg);
+  }
+  78% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) rotate(-3deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-40%) scale(0.9) rotate(-3deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-world.pp-world-on {
+    animation-duration: 0.01s;
+  }
+}
+
+/* The screen's flash in a new world's colour (hudLink.showWorldBanner). */
+.pp-world-flash {
+  opacity: 0;
+  pointer-events: none;
+}
+.pp-world-flash.pp-flash-on {
+  animation: pp-world-flash 0.9s ease-out forwards;
+}
+@keyframes pp-world-flash {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-world-flash.pp-flash-on {
+    animation: none;
+  }
+}

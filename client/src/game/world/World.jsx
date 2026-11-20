@@ -12,9 +12,12 @@ import { createGroundGeometry, createGroundMap } from './ground'
 import { buildEggStands } from './eggs'
 import { buildPortalFrame } from './portalFrame'
 import { createPaintedSigns } from './signs'
+import { buildPlazaDecor } from './plazaDecor'
 import { buildRollZone } from './rollZone'
 import { buildPads, buildShop } from './structures'
 import { buildHills } from './hills'
+import { buildCandyCastle } from './candyCastle'
+import { buildPalace } from './palace'
 import { addScoreboard } from './terrain'
 
 /**
@@ -85,14 +88,19 @@ export function World() {
     const { decorDensity, maxTexture } = useQuality.getState().settings
     const set = new BlockSet()
     // Candy mesas all round the canyon (sandstone at Palm Beach), the scoreboard on the south one.
-    buildHills(set, { density: decorDensity, venue: venueOf(world) })
-    addScoreboard(set, venueOf(world))
     const propBuilder = new PropBuilder()
+    // The Pancake Palace's walls and towers, or each other world's cliffs.
+    const venue = venueOf(world)
+    if (venue.palace) buildPalace(set, propBuilder, { density: decorDensity })
+    else buildHills(set, { density: decorDensity, venue })
+    if (venue.candy) buildCandyCastle(set, { density: decorDensity })
+    addScoreboard(set, venueOf(world))
     buildPads(set, propBuilder)
     buildShop(set, { detail: decorDensity >= 0.75, world })
-    buildRollZone(set, propBuilder, { detail: decorDensity >= 0.75, world })
+    buildRollZone(set, propBuilder, { world })
+    buildPlazaDecor(set, propBuilder, { world })
     buildPortalFrame(set)
-    buildEggStands(set)
+    buildEggStands(set, world)
 
     const map = createGroundMap(maxTexture, world)
     const groundMaterial = createToyMaterial({ instanced: false, vertexColors: false, map, studScale: 2 })
@@ -100,7 +108,11 @@ export function World() {
     performance.mark('pp:world-end')
     return {
       blocks: set.build(sharedMaterials().blocks),
-      props: asToyInstance(propBuilder.build(), sharedMaterials().toy),
+      // Round props, if this world has any left (the voxel lobbies are almost all blocks).
+      props: (() => {
+        const geometry = propBuilder.build()
+        return geometry ? asToyInstance(geometry, sharedMaterials().toy) : null
+      })(),
       ground: { geometry: createGroundGeometry(world), material: groundMaterial, map },
     }
   }, [world])
@@ -108,8 +120,10 @@ export function World() {
   useEffect(
     () => () => {
       disposeBlocks(blocks)
-      props.geometry.dispose()
-      props.dispose()
+      if (props) {
+        props.geometry.dispose()
+        props.dispose()
+      }
       ground.geometry.dispose()
       ground.material.dispose()
       ground.map.dispose()
@@ -121,7 +135,7 @@ export function World() {
     <>
       <mesh geometry={ground.geometry} material={ground.material} receiveShadow={shadows} />
       <primitive object={blocks} castShadow={shadows} receiveShadow={shadows} />
-      <primitive object={props} castShadow={shadows} receiveShadow={shadows} />
+      {props && <primitive object={props} castShadow={shadows} receiveShadow={shadows} />}
       {signs.map((sign) => (
         <mesh key={sign.texture.uuid} geometry={sign.geometry} material={sign.material} position={sign.position} rotation={sign.rotation} renderOrder={1} />
       ))}

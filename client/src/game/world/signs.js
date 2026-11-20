@@ -10,11 +10,10 @@ import {
   Vector3,
 } from 'three'
 
-import { ROLL_ZONE, SHOP_SIGN, SHOP_SIGN_FACING } from '@shared/world'
+import { PIT, SHOP_SIGN, SHOP_SIGN_FACING } from '@shared/world'
 
 import { venueOf } from '../sceneStyle'
 import { DECAL_Y, DIGIT, DIRECTIONS, END_ZONE_TEXT, LOGO, yardNumbers } from './pitch'
-import { ARCH_SIGN } from './rollZone'
 
 const FONT = '"Fredoka One", "Arial Rounded MT Bold", sans-serif'
 
@@ -125,8 +124,8 @@ function arcText(ctx, text, cx, cy, r, size, top) {
 
 /**
  * The circular logo in the plaza: a rim, a ring with the venue's words over the top and
- * under the bottom between two stars, and in the middle a disc with a falling phone on it
- * - in the venue's colours and words (`logo`: SKY CITY, or PALM BEACH RESORT).
+ * under the bottom between two stars, and in the middle a disc with a pan flipping a
+ * pancake - in the venue's colours and words (`logo`).
  */
 function paintLogo(ctx, [rx, ry, size], logo) {
   const c = size / 2
@@ -160,60 +159,70 @@ function paintLogo(ctx, [rx, ry, size], logo) {
     ctx.fill()
     ctx.restore()
   }
-  // The emblem: a phone tipping over as it falls, its screen cracked, speed marks behind
-  // it (the same art as the game's icon, ui/icons.js).
+  // The emblem: a frying pan with a golden pancake flipping up out of it (the same art
+  // as the game's icon, ui/icons.js).
   ctx.save()
   const k = (size * 0.5) / 100
   ctx.translate(cx - 50 * k, cy - 50 * k)
   ctx.scale(k, k)
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  for (const [x0, y0, x1, y1] of [[8, 34, 22, 38], [6, 50, 20, 51], [10, 66, 23, 63]]) {
-    ctx.beginPath()
-    ctx.moveTo(x0, y0)
-    ctx.lineTo(x1, y1)
-    ctx.strokeStyle = '#ffffff'
-    ctx.lineWidth = 5
+  const ink = (w) => {
+    ctx.lineWidth = w
+    ctx.strokeStyle = '#1b1b1f'
     ctx.stroke()
   }
-  ctx.translate(52, 50)
-  ctx.rotate(-0.42)
-  ctx.translate(-52, -50)
-  const rounded = (x, y, w, h, r) => {
-    ctx.beginPath()
-    ctx.moveTo(x + r, y)
-    ctx.arcTo(x + w, y, x + w, y + h, r)
-    ctx.arcTo(x + w, y + h, x, y + h, r)
-    ctx.arcTo(x, y + h, x, y, r)
-    ctx.arcTo(x, y, x + w, y, r)
-    ctx.closePath()
-  }
-  rounded(30, 10, 44, 80, 10)
-  ctx.fillStyle = '#2a4fd8'
-  ctx.fill()
-  ctx.lineWidth = 6
-  ctx.strokeStyle = '#1b1b1f'
-  ctx.stroke()
-  rounded(36, 18, 32, 62, 4)
-  const glass = ctx.createLinearGradient(0, 18, 0, 80)
-  glass.addColorStop(0, '#bff6ff')
-  glass.addColorStop(0.5, '#5fd6ff')
-  glass.addColorStop(1, '#3a6bff')
-  ctx.fillStyle = glass
-  ctx.fill()
-  ctx.fillStyle = '#1b1b1f'
-  ctx.fillRect(45, 13, 14, 3.5)
-  ctx.strokeStyle = '#ffffff'
-  ctx.lineWidth = 2.6
+  // The pan, tipped a little, its handle out to the right.
+  ctx.save()
+  ctx.translate(50, 60)
+  ctx.rotate(-0.24)
+  ctx.translate(-50, -60)
   ctx.beginPath()
-  ctx.moveTo(58, 30)
-  ctx.lineTo(52, 42)
-  ctx.lineTo(60, 48)
-  ctx.lineTo(50, 62)
-  ctx.moveTo(52, 42)
-  ctx.lineTo(42, 46)
-  ctx.moveTo(60, 48)
-  ctx.lineTo(66, 58)
+  ctx.roundRect(62, 64, 34, 11, 5.5)
+  ctx.fillStyle = '#6a3a1e'
+  ctx.fill()
+  ink(5)
+  ctx.beginPath()
+  ctx.ellipse(38, 70, 32, 13, 0, 0, Math.PI * 2)
+  const body = ctx.createLinearGradient(0, 57, 0, 83)
+  body.addColorStop(0, '#5a5e6a')
+  body.addColorStop(1, '#24262c')
+  ctx.fillStyle = body
+  ctx.fill()
+  ink(6)
+  ctx.beginPath()
+  ctx.ellipse(38, 66, 25, 8, 0, 0, Math.PI * 2)
+  ctx.fillStyle = '#2a2c33'
+  ctx.fill()
+  ctx.restore()
+  // The pancake up in the air, with a pat of butter.
+  ctx.save()
+  ctx.translate(44, 30)
+  ctx.rotate(0.31)
+  ctx.translate(-44, -30)
+  ctx.beginPath()
+  ctx.ellipse(44, 32, 24, 10, 0, 0, Math.PI * 2)
+  const cake = ctx.createLinearGradient(0, 22, 0, 42)
+  cake.addColorStop(0, '#ffd27a')
+  cake.addColorStop(0.6, '#f2a640')
+  cake.addColorStop(1, '#c87420')
+  ctx.fillStyle = cake
+  ctx.fill()
+  ink(5.5)
+  ctx.beginPath()
+  ctx.roundRect(38, 20, 10, 7, 2)
+  ctx.fillStyle = '#fff17a'
+  ctx.fill()
+  ink(3)
+  ctx.restore()
+  // Whoosh marks either side.
+  ctx.beginPath()
+  ctx.moveTo(20, 14)
+  ctx.quadraticCurveTo(14, 20, 16, 28)
+  ctx.moveTo(74, 10)
+  ctx.quadraticCurveTo(80, 16, 78, 24)
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 4
   ctx.stroke()
   ctx.restore()
 }
@@ -233,9 +242,9 @@ const ROUND_SIDES = 32
  */
 const cellsFor = (v) => ({
   logo: { rect: [0, 0, 0.5, 0.5], paint: (ctx, r) => paintLogo(ctx, r, v.logo) },
-  arch: { rect: [0.5, 0, 0.5, 0.15], paint: (ctx, r) => paintText(ctx, r, 'SMASH THE HOTEL', { fill: GOLD, edge: '#c2410c', slant: 0.14 }) },
-  shop: { rect: [0.5, 0.15, 0.5, 0.13], paint: (ctx, r) => paintText(ctx, r, 'PHONE SHOP', { fill: GOLD, edge: '#c2410c', slant: 0.14 }) },
-  zone: { rect: [0.5, 0.28, 0.5, 0.12], paint: (ctx, r) => paintText(ctx, r, 'DROP ZONE', { fill: NAVY, edge: '#a08a10' }) },
+  arch: { rect: [0.5, 0, 0.5, 0.15], paint: (ctx, r) => paintText(ctx, r, 'TO THE SKY!', { fill: GOLD, edge: '#c2410c', slant: 0.14 }) },
+  shop: { rect: [0.5, 0.15, 0.5, 0.13], paint: (ctx, r) => paintText(ctx, r, 'PAN SHOP', { fill: GOLD, edge: '#c2410c', slant: 0.14 }) },
+  zone: { rect: [0.5, 0.28, 0.5, 0.12], paint: (ctx, r) => paintText(ctx, r, 'LAUNCH PAD', { fill: NAVY, edge: '#a08a10' }) },
   ...Object.fromEntries(
     Array.from({ length: 6 }, (_, d) => [
       `digit${d}`,
@@ -259,9 +268,8 @@ const cellsFor = (v) => ({
  * higher - at least 3 cm over whatever they're on.
  */
 function quadList() {
-  const zoneWidth = 7.5
+  const zoneWidth = 4.2
   const quads = [
-    { cell: 'arch', width: ARCH_SIGN.width - 0.3, at: [0, ARCH_SIGN.y, ARCH_SIGN.faceZ + 0.04], yaw: 0, flat: false },
     {
       cell: 'shop',
       width: SHOP_SIGN.maxZ - SHOP_SIGN.minZ - 3,
@@ -270,10 +278,8 @@ function quadList() {
       yaw: (SHOP_SIGN_FACING * Math.PI) / 2,
       flat: false,
     },
-    // Over the drop zone's yellow strip (top 0.10) and its navy chevrons (top 0.14),
-    // either side of the middle.
-    { cell: 'zone', width: zoneWidth, at: [-8.6, 0.18, (ROLL_ZONE.minZ + ROLL_ZONE.maxZ) / 2 + 0.3], yaw: 0, flat: true },
-    { cell: 'zone', width: zoneWidth, at: [8.6, 0.18, (ROLL_ZONE.minZ + ROLL_ZONE.maxZ) / 2 + 0.3], yaw: 0, flat: true },
+    // On the launch pit's floor, between the launch circle and the south slope.
+    { cell: 'zone', width: zoneWidth, at: [PIT.x, -PIT.depth + 0.09, PIT.z + 5.4], yaw: 0, flat: true },
     // The logo is drawn as a round disc, not a square, so the yard lines cut back round it
     // never run under its (clear) corners.
     { cell: 'logo', width: LOGO.radius * 2, at: [LOGO.x, DECAL_Y, LOGO.z], yaw: 0, flat: true, round: true },

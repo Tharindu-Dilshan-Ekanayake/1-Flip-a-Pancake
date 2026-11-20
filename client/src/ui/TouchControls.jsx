@@ -135,7 +135,7 @@ export function TouchControls() {
       {canThrow && (
         <button
           type="button"
-          aria-label="Throw your phone"
+          aria-label="Flip your pancake"
           className="touch-throw pp-btn pp-chunky absolute z-20 flex touch-none flex-col items-center justify-center rounded-full text-white"
           style={roundButton(96, GRADIENTS.goldButton)}
           onPointerDown={(e) => {

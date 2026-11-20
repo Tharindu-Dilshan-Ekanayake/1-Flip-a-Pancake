@@ -18,4 +18,15 @@ export const skyUniforms = {
   /** How many thin high clouds streak across it, and how many stars show (0-1 each). */
   clouds: { value: SKY.clouds },
   stars: { value: SKY.stars },
+  /**
+   * The fantasy sky of the launch (0 in the lobby): swirling nebula clouds in two colours,
+   * aurora curtains, and a great glowing moon or planet low in the sky.
+   */
+  fantasy: { value: 0 },
+  nebulaA: { value: new Color('#ffffff') },
+  nebulaB: { value: new Color('#ffffff') },
+  aurora: { value: 0 },
+  moon: { value: 0 },
+  moonColor: { value: new Color('#ffffff') },
+  time: { value: 0 },
 }

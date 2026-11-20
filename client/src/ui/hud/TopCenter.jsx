@@ -26,7 +26,7 @@ function TutorialBanner({ step }) {
   const onZone = useGame((s) => s.zone.rollZone)
   let text = current.text
   if (current.health) text += ` (${formatNumber(Math.min(health, current.health))}/${formatNumber(current.health)})`
-  if (current.event === 'roll' && onZone) text = 'Hold DROP, then let go when the meter hits the top!'
+  if (current.event === 'roll' && onZone) text = 'Hold LAUNCH, then let go when the meter hits the top!'
   return (
     <div
       className="flex items-center"
@@ -64,7 +64,7 @@ function TutorialBanner({ step }) {
  */
 function goalFor(profile, pending) {
   if (isMaxLevel(profile)) {
-    return { key: 'rebirth', text: `REBIRTH READY! Rebirth for x${rebirthMultiplier(profile.rebirths + 1)} Skill`, progress: null, panel: 'rebirth' }
+    return { key: 'rebirth', text: `REBIRTH READY! Rebirth for x${rebirthMultiplier(profile.rebirths + 1)} Strength`, progress: null, panel: 'rebirth' }
   }
   const next = nextTire(profile)
   if (next) {
@@ -72,7 +72,7 @@ function goalFor(profile, pending) {
     const affordable = wins >= next.cost
     return {
       key: `${affordable ? 'buy' : 'save'}:${next.id}`,
-      text: affordable ? `You can buy the ${next.name}! Visit the Phone Shop` : `Next phone: ${next.name} (${formatNumber(wins)}/${formatNumber(next.cost)} Wins)`,
+      text: affordable ? `You can buy the ${next.name}! Visit the Pan Shop` : `Next pan: ${next.name} (${formatNumber(wins)}/${formatNumber(next.cost)} Trophies)`,
       progress: Math.min(1, wins / Math.max(1, next.cost)),
       panel: null,
     }

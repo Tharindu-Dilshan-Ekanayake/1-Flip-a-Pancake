@@ -29,12 +29,12 @@ const ICONS = {
 }
 
 const BLURBS = {
-  healthX2: 'Double every Skill gain, forever',
-  winsX2: 'Double the Wins from every drop, forever',
-  autoRoll: 'Throws your phone for you from the Drop Zone',
+  healthX2: 'Double every Strength gain, forever',
+  winsX2: 'Double the Trophies from every launch, forever',
+  autoRoll: 'Launches your pancake for you from the Launch Pad',
   padVeryOp: 'Unlocks the x40 Diamond Pad',
   padBest: 'Unlocks the x100 Galaxy Pad',
-  sphinx: `Limited: x${formatNumber(PETS.sphinx.mult)} Skill pet`,
+  sphinx: `Limited: x${formatNumber(PETS.sphinx.mult)} Strength pet`,
 }
 
 const BLURB_STYLE = { color: '#3a2a10', fontFamily: 'system-ui, sans-serif', fontWeight: 700 }
