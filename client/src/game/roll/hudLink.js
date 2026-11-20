@@ -45,6 +45,7 @@ let distanceSpans = []
 let zoneSpans = []
 let zoneFill = null
 let marker = null
+let stageSpans = []
 let shown = -1
 let shownZone = null
 let lastWrite = 0
@@ -54,6 +55,7 @@ export function setRollHudElement(el) {
   zoneSpans = el ? [...el.querySelectorAll('[data-zone]')] : []
   zoneFill = el ? el.querySelector('[data-zone-fill]') : null
   marker = el ? el.querySelector('[data-zone-marker]') : null
+  stageSpans = el ? [...el.querySelectorAll('[data-stage]')] : []
   shown = -1
   shownZone = null
   lastWrite = 0
@@ -64,17 +66,13 @@ export function writeDistance(meters, now = performance.now()) {
   if (distanceSpans.length === 0 || m === shown || now - lastWrite < UPDATE_MS) return
   shown = m
   lastWrite = now
-  // Falling: the depth counts down below the edge, "-1,234 m".
-  const text = m > 0 ? `-${formatDistance(m)}` : formatDistance(0)
+  // Climbing: the height counts up, "1,234 m".
+  const text = formatDistance(m)
   for (const span of distanceSpans) setText(span, text)
-  if (marker) marker.style.transform = `translateY(${Math.min(1, m / barMax) * 100}%)`
+  // Up the whole sky, a stage at a time (every stage an equal step of the bar).
+  if (marker) marker.style.transform = `translateY(${-zoneBarPosition(m) * 100}%)`
 }
 
-/** The depth the side bar's bottom stands for, this drop (set as the drop starts). */
-let barMax = 1000
-export function setBarScale(max) {
-  barMax = Math.max(1, max)
-}
 
 /**
  * Where metre `m` sits on the zone progress bar, 0-1: each zone gets an equal segment,
@@ -109,10 +107,36 @@ export function writeSpeed(amount, now = performance.now()) {
 }
 let lastSpeedWrite = 0
 
-/** Shows zone `index`'s `name` under the distance, filled with `gradient` (a CSS gradient). */
+/** Shows zone `index`'s `name` under the distance, filled with `gradient` (a CSS gradient), and its stage number under the bar. */
 export function writeZone(index, name, gradient) {
+  if (index >= 0) for (const span of stageSpans) setText(span, `STAGE ${index + 1} / ${ZONES.length}`)
   if (zoneSpans.length === 0 || name === shownZone) return
   shownZone = name
   for (const span of zoneSpans) setText(span, name)
   if (zoneFill) zoneFill.style.backgroundImage = gradient
+}
+
+/** The world banner (RollOverlay): DIAMOND WORLD! sweeping across as the pancake flies in. */
+let worldBanner = null
+let worldFlash = null
+export function setWorldBannerElement(el) {
+  worldBanner = el
+}
+/** The full-screen flash in a new world's colour (RollOverlay). */
+export function setWorldFlashElement(el) {
+  worldFlash = el
+}
+/** Shows world `title` filled with `gradient`, the screen flashing `color`; safe from the frame loop. */
+export function showWorldBanner(title, gradient, color = '#ffffff') {
+  if (worldFlash) {
+    worldFlash.style.background = `radial-gradient(circle at 50% 50%, ${color} 0%, ${color}88 35%, transparent 75%)`
+    worldFlash.classList.remove('pp-flash-on')
+    requestAnimationFrame(() => worldFlash?.classList.add('pp-flash-on'))
+  }
+  if (!worldBanner) return
+  for (const span of worldBanner.querySelectorAll('[data-world]')) setText(span, title)
+  const fill = worldBanner.querySelector('[data-world-fill]')
+  if (fill) fill.style.backgroundImage = gradient
+  worldBanner.classList.remove('pp-world-on')
+  requestAnimationFrame(() => worldBanner?.classList.add('pp-world-on'))
 }

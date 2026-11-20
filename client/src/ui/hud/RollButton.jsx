@@ -17,6 +17,8 @@ const AUTO_DELAY_MS = 700
 const AUTO_HOLD_MS = 150
 /** A press is ignored this soon after the last (a double tap, a bouncing key). */
 const PRESS_COOLDOWN_MS = 250
+/** On a phone or tablet the button says HOLD; with a keyboard, HOLD E. */
+const TOUCH = typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || navigator.maxTouchPoints > 0)
 /** Keys that hold DROP. */
 const DROP_KEYS = new Set(['KeyE', 'Enter', 'KeyF'])
 
@@ -150,7 +152,7 @@ export function RollButton() {
       // The grade letting go now would get, in its colour, and how deep it would go:
       // "LET GO! PERFECT x1.5". Both layers of the outlined text (StrokeText).
       const grade = hitGrade(charge)
-      const text = launch.full ? `LET GO! ${grade.label.replace(/ THROW|[!.]+$/g, '')} x${hitReach(charge).toFixed(1)}` : 'CHARGING...'
+      const text = launch.full ? `LET GO! ${grade.label.replace(/ LAUNCH|[!.]+$/g, '')} x${hitReach(charge).toFixed(1)}` : 'CHARGING...'
       for (const layer of labelRef.current?.querySelectorAll('.pp-text-stroke, .pp-text-fill') ?? []) layer.textContent = text
       const fill = labelRef.current?.querySelector('.pp-text-fill')
       if (fill) fill.style.color = launch.full ? GRADE_COLORS[grade.id] : '#ffffff'
@@ -198,7 +200,7 @@ export function RollButton() {
           </div>
           <span className="flex items-center" style={{ fontSize: u(32), marginTop: u(10), gap: u(8) }}>
             <Icon name="tire" size={u(40)} />
-            <StrokeText stroke={u(7)}>Let go when the meter hits the top for a PERFECT throw!</StrokeText>
+            <StrokeText stroke={u(7)}>Let go when the meter hits the top for a PERFECT launch!</StrokeText>
           </span>
         </div>
       )}
@@ -210,26 +212,32 @@ export function RollButton() {
               e.preventDefault()
               doGrab()
             }}
-            title="Drop your phone (hold, then let go)"
+            title="Launch your pancake (hold, then let go)"
             radius={22}
             border={6}
-            style={{ width: u(330), height: u(130), touchAction: 'none' }}
+            style={{ width: u(380), height: u(150), padding: `0 ${u(24)}`, touchAction: 'none' }}
           >
-            <span className="flex items-center" style={{ gap: u(10), fontSize: u(78) }}>
-              <StrokeText stroke={u(13)}>DROP!</StrokeText>
+            {/* LAUNCH! and, under it inside the button, how: HOLD (touch) or HOLD E (keyboard). */}
+            <span className="flex flex-col items-center whitespace-nowrap" style={{ lineHeight: 1, gap: u(6) }}>
+              <span style={{ fontSize: u(62) }}>
+                <StrokeText stroke={u(11)}>LAUNCH!</StrokeText>
+              </span>
+              <span className="flex items-center" style={{ fontSize: u(28), gap: u(8) }}>
+                <StrokeText stroke={u(7)}>HOLD</StrokeText>
+                {!TOUCH && (
+                  <span className="flex items-center justify-center" style={{ minWidth: u(38), height: u(38), borderRadius: u(9), background: '#ffffff', border: `${u(4)} solid #1b1b1f`, color: '#1b1b1f', fontSize: u(26) }}>
+                    E
+                  </span>
+                )}
+              </span>
             </span>
           </ChunkyButton>
-        )}
-        {!gripping && (
-          <span style={{ fontSize: u(30), marginTop: u(10) }}>
-            <StrokeText stroke={u(7)}>Hold DROP (or E), let go at the top!</StrokeText>
-          </span>
         )}
         {ownsAuto && (
           <ChunkyButton
             gradient={autoOn ? GRADIENTS.goldButton : GRADIENTS.greyButton}
             onClick={() => actions.setSetting('autoRoll', !autoOn)}
-            title="Auto Drop"
+            title="Auto Launch"
             radius={10}
             border={4}
             style={{ height: u(56), padding: `0 ${u(20)}`, marginTop: u(12) }}

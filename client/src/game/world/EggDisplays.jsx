@@ -11,9 +11,10 @@ import {
   Vector3,
 } from 'three'
 
-import { EGG_STANDS } from '@shared/world'
+import { EGG_STANDS, eggAt } from '@shared/world'
 
 import { getQuality } from '../../store/quality'
+import { useGame } from '../../store/game'
 import { EGG_COLORS } from '../../ui/icons'
 import { createGlowInstances, disposeGlow, glowTime } from '../glow'
 import { eggHeight } from './eggs'
@@ -30,6 +31,9 @@ const EGG_LOOKS = {
   volcano: { pattern: 4, glow: '#ff6a14' },
   // Palm Beach: sandy white, blue waves rolling round it, seashell spots.
   beach: { pattern: 5, glow: '#5fe6ff', base: '#fff3dc', spot: '#2fb8e0', dark: '#ff8a7a' },
+  // Frosty Peaks: icy blue, snow-white spots. Lava Kitchen: black crust, glowing cracks.
+  frost: { pattern: 0, glow: '#9fe8ff', base: '#dff4ff', spot: '#ffffff', dark: '#5ab0ff' },
+  magma: { pattern: 4, glow: '#ff5a1f', base: '#2a120e', spot: '#ffb81f', dark: '#ff3a1a' },
 }
 
 const vertexHead = /* glsl */ `
@@ -173,6 +177,7 @@ const _axis = new Vector3(0, 1, 0)
 export function EggDisplays() {
   const meshRef = useRef(null)
   const glowRef = useRef(null)
+  const world = useGame((s) => s.profile.world || 0)
 
   const assets = useMemo(() => {
     const count = EGG_STANDS.length
@@ -189,8 +194,9 @@ export function EggDisplays() {
     const glows = createGlowInstances(count, 0.55)
     const c = new Color()
     EGG_STANDS.forEach((stand, i) => {
-      const look = EGG_LOOKS[stand.eggId] || EGG_LOOKS.basic
-      const [iconBase, iconDark, iconSpot] = EGG_COLORS[stand.eggId] || EGG_COLORS.basic
+      const eggId = eggAt(stand, world)
+      const look = EGG_LOOKS[eggId] || EGG_LOOKS.basic
+      const [iconBase, iconDark, iconSpot] = EGG_COLORS[eggId] || EGG_COLORS.basic
       const base = look.base || iconBase
       const spotColor = look.spot || iconSpot
       const darkColor = look.dark || iconDark
@@ -204,7 +210,7 @@ export function EggDisplays() {
     })
     glows.count = count
     return { mesh, glows }
-  }, [])
+  }, [world])
 
   useEffect(
     () => () => {

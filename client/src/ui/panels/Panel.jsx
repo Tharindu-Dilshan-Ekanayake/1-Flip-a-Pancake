@@ -39,6 +39,9 @@ export function CloseButton({ onClick, style }) {
  *           footer?: React.ReactNode, onClose?: () => void }} props `width` in reference
  *   pixels; `icon` sits in front of the title
  */
+/** How big panels are drawn (1 = the reference's size). */
+const PANEL_ZOOM = 0.78
+
 export function Panel({ title, icon, width = 920, children, footer, onClose }) {
   const closePanel = useGame((s) => s.closePanel)
   const close = onClose || closePanel
@@ -61,8 +64,9 @@ export function Panel({ title, icon, width = 920, children, footer, onClose }) {
         if (e.target === e.currentTarget) close()
       }}
     >
-      {/* Room for the close button at the right, and to scroll on short screens. */}
-      <div className="pp-panel-in relative flex flex-col items-center" style={{ width: `min(${u(width)}, calc(100vw - ${u(60)} - 16px))` }}>
+      {/* Room for the close button at the right, and to scroll on short screens. Every
+          panel is drawn at PANEL_ZOOM: compact, so it never swamps the game behind it. */}
+      <div className="pp-panel-in relative flex flex-col items-center" style={{ width: `min(${u(width)}, calc(100vw - ${u(60)} - 16px))`, zoom: PANEL_ZOOM }}>
         <div
           className="relative w-full"
           style={{

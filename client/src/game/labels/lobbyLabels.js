@@ -1,7 +1,7 @@
-import { EGGS, PADS, PETS, RARITIES, SHOP, TIRES, WORLD_PORTALS, WORLDS } from '@shared/balance'
+import { EGGS, PADS, PETS, RARITIES, SHOP, TIRES, WORLDS } from '@shared/balance'
 import { formatNumber } from '@shared/format'
 import { isPadUnlocked } from '@shared/logic'
-import { EGG_STANDS, FREE_REWARD, padCenterZ, PORTALS, ROLL_ZONE, SPHINX_STAND, TABLE_X, TIRE_STANDS } from '@shared/world'
+import { eggAt, EGG_STANDS, FREE_REWARD, padCenterZ, PORTALS, ROLL_ZONE, SPHINX_STAND, TABLE_X, TIRE_STANDS } from '@shared/world'
 
 import { eggHeight } from '../world/eggs'
 import { BOARD_BOTTOM, BOARD_HEIGHT, PAD_THEMES } from '../world/structures'
@@ -29,7 +29,7 @@ export function padLabelSpec(index, unlocked, world = 0) {
   const pad = PADS[index]
   const theme = PAD_THEMES[index]
   const lines = [
-    { text: `x${formatNumber(pad.mult)} SKILL`, size: 54, icon: 'heart', gradient: tint(theme.text) },
+    { text: `x${formatNumber(pad.mult)} STRENGTH`, size: 54, icon: 'heart', gradient: tint(theme.text) },
     { text: pad.name, size: 34, fill: '#ffffff' },
   ]
   if (unlocked) {
@@ -38,7 +38,7 @@ export function padLabelSpec(index, unlocked, world = 0) {
     lines.push({ text: `${WORLDS[pad.world].name.toUpperCase()} ONLY`, size: 44, icon: 'portal', gradient: TEXT.blue })
   } else if (pad.product) {
     lines.push({ text: pad.tag, size: 46, rainbow: true })
-    lines.push({ text: `${formatNumber(SHOP[pad.product].price)} Wins`, size: 42, icon: 'trophy', gradient: TEXT.gold })
+    lines.push({ text: `${formatNumber(SHOP[pad.product].price)} Trophies`, size: 42, icon: 'trophy', gradient: TEXT.gold })
   } else {
     const word = pad.rebirths === 1 ? 'Rebirth' : 'Rebirths'
     lines.push({ text: `LOCKED: ${pad.rebirths} ${word}`, size: 44, icon: 'rebirth', gradient: TEXT.red })
@@ -50,12 +50,12 @@ export function padLabelSpec(index, unlocked, world = 0) {
 const padReserve = (index) => {
   const pad = PADS[index]
   const lines = [
-    { text: `x${formatNumber(pad.mult)} SKILL`, size: 54, icon: 'heart' },
+    { text: `x${formatNumber(pad.mult)} STRENGTH`, size: 54, icon: 'heart' },
     { text: pad.name, size: 34 },
   ]
   if (pad.product) {
     lines.push({ text: pad.tag, size: 46 })
-    lines.push({ text: `${formatNumber(SHOP[pad.product].price)} Wins`, size: 42, icon: 'trophy' })
+    lines.push({ text: `${formatNumber(SHOP[pad.product].price)} Trophies`, size: 42, icon: 'trophy' })
   } else {
     lines.push({ text: 'LOCKED: 88 Rebirths', size: 44, icon: 'rebirth' })
   }
@@ -68,10 +68,10 @@ export function padLabels(profile) {
     // Well in front of the throw pad's backboard (structures.js), centred on it: the label
     // turns to face the camera and is wider than the board, so any nearer and its far half
     // swings behind the board seen from an angle.
-    position: [TABLE_X - 2.2, BOARD_BOTTOM + BOARD_HEIGHT / 2, padCenterZ(i)],
+    position: [TABLE_X + 0.4, BOARD_BOTTOM + BOARD_HEIGHT / 2, padCenterZ(i)],
     spec: padLabelSpec(i, isPadUnlocked(profile, i), profile.world || 0),
     reserve: padReserve(i),
-    fade: 150,
+    fade: 60,
   }))
 }
 
@@ -109,9 +109,9 @@ export function standLabelSpec(index, state) {
   const last =
     state === 'equipped' || state === 'owned'
       ? rarityLine(tire)
-      : { text: `${formatNumber(tire.cost)} Wins`, size: 40, icon: 'trophy', gradient: state === 'locked' ? TEXT.red : TEXT.price }
+      : { text: `${formatNumber(tire.cost)} Trophies`, size: 40, icon: 'trophy', gradient: state === 'locked' ? TEXT.red : TEXT.price }
   return {
-    lines: [tag, { text: tire.name, size: 46, fill: '#ffffff' }, { text: `+${formatNumber(tire.power)} Skill`, size: 40, icon: 'heart', gradient: TEXT.gold }, last],
+    lines: [tag, { text: tire.name, size: 46, fill: '#ffffff' }, { text: `+${formatNumber(tire.power)} Strength`, size: 40, icon: 'heart', gradient: TEXT.gold }, last],
     pxPerUnit: 70,
   }
 }
@@ -121,8 +121,8 @@ const standReserve = (index) => ({
   lines: [
     { text: 'CAN BUY!', size: 36 },
     { text: TIRES[index].name, size: 46 },
-    { text: `+${formatNumber(TIRES[index].power)} Skill`, size: 40, icon: 'heart' },
-    { text: `${formatNumber(TIRES[index].cost)} Wins`, size: 40, icon: 'trophy' },
+    { text: `+${formatNumber(TIRES[index].power)} Strength`, size: 40, icon: 'heart' },
+    { text: `${formatNumber(TIRES[index].cost)} Trophies`, size: 40, icon: 'trophy' },
   ],
 })
 
@@ -133,34 +133,35 @@ export function standLabels(profile) {
     position: [stand.x, stand.y + 6.8 + stand.row * 1.35, stand.z],
     spec: standLabelSpec(stand.index, standState(profile, stand.index)),
     reserve: standReserve(stand.index),
-    fade: 70,
+    fade: 28,
   }))
 }
 
 /** The big eggs' title colours. */
-const BIG_EGG_TEXT = { volcano: TEXT.red, beach: TEXT.blue }
+const BIG_EGG_TEXT = { volcano: TEXT.red, beach: TEXT.blue, frost: TEXT.blue, magma: TEXT.red }
 
 export function eggLabels(profile) {
   return EGG_STANDS.map((stand) => {
-    const egg = EGGS[stand.eggId]
+    const eggId = eggAt(stand, profile?.world || 0)
+    const egg = EGGS[eggId]
     // A world's own egg, seen from another world: where to go for it.
     const elsewhere = egg.world !== undefined && (profile?.world || 0) !== egg.world
     const lines = stand.big
       ? [
-          { text: `${egg.name} Egg`, size: 54, gradient: BIG_EGG_TEXT[stand.eggId] || TEXT.red },
+          { text: `${egg.name} Egg`, size: 54, gradient: BIG_EGG_TEXT[eggId] || TEXT.red },
           elsewhere
             ? { text: `${WORLDS[egg.world].name.toUpperCase()} ONLY`, size: 44, icon: 'portal', gradient: TEXT.blue }
-            : { text: `${formatNumber(egg.cost.wins)} Wins`, size: 46, icon: 'trophy', gradient: TEXT.gold },
+            : { text: `${formatNumber(egg.cost.wins)} Trophies`, size: 46, icon: 'trophy', gradient: TEXT.gold },
         ]
       : [
           { text: `${egg.name} Egg`, size: 50, fill: '#ffffff' },
-          { text: `${formatNumber(egg.cost.wins)} Wins`, size: 44, icon: 'trophy', gradient: TEXT.gold },
+          { text: `${formatNumber(egg.cost.wins)} Trophies`, size: 44, icon: 'trophy', gradient: TEXT.gold },
         ]
     return {
       id: `egg-${stand.eggId}`,
       position: [stand.x, eggHeight(stand) + (stand.big ? 4 : 2.5), stand.z],
       spec: { lines, pxPerUnit: 62 },
-      fade: 100,
+      fade: 45,
     }
   })
 }
@@ -170,7 +171,7 @@ export function sphinxLabelSpec(stock) {
   const mult = PETS.sphinx.mult
   return {
     lines: [
-      { text: `${formatNumber(SHOP.sphinx.price)} Wins`, size: 46, icon: 'trophy', gradient: TEXT.gold },
+      { text: `${formatNumber(SHOP.sphinx.price)} Trophies`, size: 46, icon: 'trophy', gradient: TEXT.gold },
       { text: 'BEST IN GAME', size: 56, gradient: TEXT.red },
       { text: 'Sphinx', size: 76, fill: '#ffffff' },
       { text: `${formatNumber(mult * 100 - 100)}% BETTER`, size: 54, rainbow: true },
@@ -196,8 +197,8 @@ const scoreboardLabel = () => ({
   position: [SCOREBOARD.x, SCOREBOARD.y + 0.8 + SCOREBOARD.height / 2, SCOREBOARD.z - 1.5],
   spec: {
     lines: [
-      { text: 'PHONE PLUNGE', size: 100, gradient: TEXT.gold },
-      { text: 'TRAIN - DROP - SMASH - REBIRTH', size: 44, gradient: TEXT.white },
+      { text: 'PANCAKE SKY FLIP', size: 100, gradient: TEXT.gold },
+      { text: 'FLIP - LAUNCH - CATCH - REBIRTH', size: 44, gradient: TEXT.white },
     ],
     pxPerUnit: 34,
   },
@@ -211,36 +212,20 @@ const freeRewardLabel = () => ({
   fade: 90,
 })
 
-/**
- * Where the portal goes: Palm Beach (and what opens it - rebirths and Wins - until it's
- * open), or home.
- */
+/** Over the portal: it goes to every world, and how many you've opened. */
 const portalLabel = (profile) => (portal) => {
-  const home = profile.world === 1
-  const open = profile.world2Unlocked
-  const need = WORLD_PORTALS[portal.id]
-  const lines = home
-    ? [
-        { text: WORLDS[0].name.toUpperCase(), size: 56, gradient: TEXT.green },
-        { text: 'Back home', size: 42, gradient: TEXT.white },
-      ]
-    : [
-        { text: WORLDS[1].name.toUpperCase(), size: 60, gradient: TEXT.blue },
-        open
-          ? { text: `x${WORLDS[1].wins} Wins!`, size: 46, icon: 'trophy', gradient: TEXT.gold }
-          : { text: `${need.rebirths} Rebirths + ${formatNumber(need.wins)} Wins`, size: 40, icon: 'rebirth', gradient: TEXT.white },
-      ]
+  const opened = (profile.worldsUnlocked ?? (profile.world2Unlocked ? 1 : 0)) + 1
   return {
     id: `portal-${portal.id}`,
     position: [portal.x, portal.radius * 2 + 2.8, portal.z],
-    spec: { lines, pxPerUnit: 56 },
-    // Big enough for either side of the portal.
-    reserve: {
+    spec: {
       lines: [
-        { text: WORLDS[0].name.toUpperCase(), size: 60 },
-        { text: `${need.rebirths} Rebirths + ${formatNumber(need.wins)} Wins`, size: 46, icon: 'rebirth' },
+        { text: 'WORLD PORTAL', size: 60, gradient: TEXT.blue },
+        { text: `${opened} / ${WORLDS.length} worlds open`, size: 42, gradient: TEXT.white },
       ],
+      pxPerUnit: 56,
     },
+    reserve: { lines: [{ text: 'WORLD PORTAL', size: 60 }, { text: `${WORLDS.length} / ${WORLDS.length} worlds open`, size: 46 }] },
     fade: 140,
   }
 }
@@ -248,11 +233,11 @@ const portalLabel = (profile) => (portal) => {
 /** At the back of the drop zone: what it's for. */
 const dropLabel = () => ({
   id: 'drop-zone',
-  position: [0, 4.2, ROLL_ZONE.maxZ - 1],
+  position: [0, 5.2, ROLL_ZONE.maxZ + 6],
   spec: {
     lines: [
-      { text: 'DROP YOUR PHONE!', size: 60, gradient: TEXT.gold },
-      { text: 'Smash deeper = MORE WINS', size: 40, gradient: TEXT.white },
+      { text: 'LAUNCH YOUR PANCAKE!', size: 60, gradient: TEXT.gold },
+      { text: 'Fly higher = MORE TROPHIES', size: 40, gradient: TEXT.white },
     ],
     pxPerUnit: 52,
   },

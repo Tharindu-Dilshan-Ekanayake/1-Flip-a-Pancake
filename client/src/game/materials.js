@@ -1,4 +1,4 @@
-import { Color, MeshLambertMaterial } from 'three'
+import { Color, DataTexture, MeshToonMaterial, NearestFilter, RedFormat } from 'three'
 
 /**
  * The toy-brick look, done in the shader instead of with textures.
@@ -58,6 +58,23 @@ export const STYLE = {
   TILES: 18,
 }
 
+/**
+ * The cartoon look: light falls on every toy surface in three clean bands - shadow, mid
+ * and full light - like a 3D cartoon, instead of a smooth gradient. One tiny 3-texel ramp
+ * shared by every toy material.
+ */
+let ramp = null
+function toonRamp() {
+  if (!ramp) {
+    ramp = new DataTexture(new Uint8Array([150, 205, 255]), 3, 1, RedFormat)
+    ramp.minFilter = NearestFilter
+    ramp.magFilter = NearestFilter
+    ramp.generateMipmaps = false
+    ramp.needsUpdate = true
+  }
+  return ramp
+}
+
 /** Shared clock for animated styles; WorldClock advances it once per frame. */
 export const toyTime = { value: 0 }
 
@@ -101,20 +118,10 @@ const fragmentHead = /* glsl */ `
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
   }
 
-  // Rounded stud tile: dark seams, a lit upper-left bevel and shaded lower-right.
-  // Fades to its average once tiles shrink below a couple of pixels, so distant
-  // ground doesn't shimmer with moire.
+  // The world is smooth: no stud tiles. Every surface keeps its colour, a touch brighter
+  // on top than on the sides so blocks still read as solid shapes.
   float toyTile(vec2 p) {
-    vec2 w = fwidth(p);
-    float aa = max(max(w.x, w.y), 1e-4);
-    vec2 c = fract(p) - 0.5;
-    vec2 q = abs(c) - vec2(0.34);
-    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.1;
-    float inside = 1.0 - smoothstep(-aa, aa, d);
-    float bevel = clamp(-d * 9.0, 0.0, 1.0);
-    float lit = (c.y - c.x) * (1.0 - bevel) * 0.22;
-    float shade = mix(0.82, 1.0 + lit, inside);
-    return mix(shade, 0.95, smoothstep(0.28, 0.6, aa));
+    return 1.0;
   }
 
   // Diamond plate: a raised lozenge grid on the diagonals.
@@ -223,8 +230,8 @@ const fragmentBody = /* glsl */ `
       if (isTop || lip) {
         col = uGrass * (isTop ? 1.0 : 0.86);
       } else {
-        float cube = mod(floor(vToyPos.x / 4.0 + 0.001) + floor(vToyPos.y / 4.0 + 0.001) + floor(vToyPos.z / 4.0 + 0.001), 2.0);
-        col *= mix(0.82, 1.05, cube);
+        // Smooth rock, a little darker the further below the cap.
+        col *= mix(0.8, 1.0, clamp(1.0 - (vToyTop - vToyPos.y) / 24.0, 0.0, 1.0));
       }
       col *= toyTile(sp);
     } else if (style < 16.0) {
@@ -282,7 +289,13 @@ const fragmentBody = /* glsl */ `
       }
     }
 
+    // Soft, clean shading: tops catch the light, sides a shade deeper.
+    col *= isTop ? 1.04 : 0.95;
     diffuseColor.rgb = col;
+    // A soft bright rim where surfaces turn away from the camera: the cartoon look.
+    float toyRim = 1.0 - clamp(dot(n, normalize(cameraPosition - vToyPos)), 0.0, 1.0);
+    // (Not on floors and flat tops, which the camera sees at a glance across the plaza.)
+    totalEmissiveRadiance += col * smoothstep(0.55, 1.0, toyRim) * 0.28 * (1.0 - smoothstep(0.6, 0.95, n.y));
   }
 `
 
@@ -301,7 +314,7 @@ export function createToyMaterial({
   map = null,
   studScale = 2,
 } = {}) {
-  const material = new MeshLambertMaterial({ color: 0xffffff, vertexColors, map })
+  const material = new MeshToonMaterial({ color: 0xffffff, vertexColors, map, gradientMap: toonRamp() })
 
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uStudScale = { value: studScale }
@@ -317,7 +330,7 @@ export function createToyMaterial({
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentBody}`)
   }
   // The stud scale is a uniform, so materials differing only in it share a program.
-  material.customProgramCacheKey = () => 'toy-v2'
+  material.customProgramCacheKey = () => 'toy-v4-toon'
   return material
 }
 

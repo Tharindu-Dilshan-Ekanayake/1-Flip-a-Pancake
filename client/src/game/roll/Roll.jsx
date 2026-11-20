@@ -6,22 +6,20 @@ import {
   BufferGeometry,
   CanvasTexture,
   Color,
-  CylinderGeometry,
   DoubleSide,
   InstancedMesh,
-  LinearFilter,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  MeshStandardMaterial,
   PlaneGeometry,
   Quaternion,
   ShaderMaterial,
   SRGBColorSpace,
-  TorusGeometry,
   Vector3,
 } from 'three'
 
-import { DROP_AIR, TROPHY_FIRST, TROPHY_SPACING } from '@shared/balance'
+import { ROLL_RECOVERY, TROPHY_FIRST, TROPHY_SPACING } from '@shared/balance'
 import { formatNumber } from '@shared/format'
 import { trophyValue, winsMultiplier } from '@shared/logic'
 import { mulberry32 } from '@shared/rng'
@@ -30,24 +28,28 @@ import { sfx } from '../../audio/sfx'
 import { getGame, useGame } from '../../store/game'
 import { getQuality, useQuality } from '../../store/quality'
 import { iconUrl } from '../../ui/icons'
-import { asToyInstance, createToyInstances, PropBuilder } from '../blocks'
+import { createToyInstances, PropBuilder } from '../blocks'
 import FireBurst from '../fx/FireBurst'
 import { spawnScattered } from '../fx/popups'
 import { linkPrograms } from '../linkPrograms'
-import { sharedMaterials, STYLE } from '../materials'
-import { addPhone, phoneDims, phoneTrail } from '../phoneStyles'
+import { sharedMaterials } from '../materials'
+import { addPancake, phoneTrail } from '../phoneStyles'
 import { runtime } from '../runtime'
 import { activeWorld, showLobbySky, zones } from '../worldLook'
-import Debris from './Debris'
-import { PHONE_SCALE, T_RELEASE, yAtMeter } from './dropPath'
 import { writeDistance, writeSpeed, writeZone } from './hudLink'
-import { floorNameGradient } from './roomThemes'
+import { COLUMN, heightAt, PANCAKE_SCALE, T_RELEASE } from './launchPath'
+import { animateHero, createPancakeHero, disposeHero } from './pancakeHero'
 import { advanceRoll, roll } from './rollControl'
+import { sky, stunned } from './skyGame'
+import FlightFx from './FlightFx'
+import SkyClouds from './SkyClouds'
+import SkyGameView from './SkyGameView'
+import SkyLayers from './SkyLayers'
+import { floorNameGradient } from './skyThemes'
 import SpeedBlur from './SpeedBlur'
-import Tower from './Tower'
 
-const MAX_TROPHIES = 12
 const STREAKS = 36
+const MAX_GHOSTS = 12
 /**
  * Frame-loop priority: before every other system, so the camera has moved before anything
  * projects into it (name tags, popups). Negative, so R3F still renders itself.
@@ -66,16 +68,16 @@ const _wantLook = new Vector3()
 const _ax = new Vector3(1, 0, 0)
 const _ay = new Vector3(0, 1, 0)
 const _az = new Vector3(0, 0, 1)
-/** The camera's offset from the phone and where it looks (from the phone), both eased. */
+/** The camera's offset from the pancake and where it looks (from the pancake), both eased. */
 const camOffset = new Vector3()
 const lookOffset = new Vector3()
 /** Stable vector for runtime.flightFocus (the scratch ones are reused mid-frame). */
-const phoneFocus = new Vector3()
+const pancakeFocus = new Vector3()
 
 /** The camera's field of view widens with speed, up to this much more. */
-const FOV_KICK = 14
-const SPEED_SHAKE = 0.06
-const HIT_SHAKE = 0.75
+const FOV_KICK = 12
+const SPEED_SHAKE = 0.05
+const HIT_SHAKE = 0.35
 const HIT_SHAKE_MS = 170
 
 /** At most one trophy popup this often; the trophies in between are summed into it. */
@@ -89,7 +91,7 @@ const smoothstep = (a, b, x) => {
 
 /**
  * Speed-line streaks, made once: alternately down the left and right of the view, each a
- * little thicker or longer than the next, and every third tinted with your phone's colour.
+ * little thicker or longer than the next, and every third tinted with your pan's colour.
  */
 const streakState = (() => {
   const r = mulberry32(5)
@@ -147,126 +149,106 @@ const streakFragmentShader = /* glsl */ `
   }
 `
 
-function createTrophyGeometry() {
-  const p = new PropBuilder()
-  const gold = '#ffcc1f'
-  p.add(new CylinderGeometry(0.42, 0.24, 0.62, 12), { position: [0, 0.55, 0], color: gold, style: STYLE.GLOW })
-  p.add(new TorusGeometry(0.2, 0.06, 6, 10, Math.PI), { position: [-0.42, 0.62, 0], rotation: [0, 0, Math.PI / 2], color: gold })
-  p.add(new TorusGeometry(0.2, 0.06, 6, 10, Math.PI), { position: [0.42, 0.62, 0], rotation: [0, 0, -Math.PI / 2], color: gold })
-  p.add(new CylinderGeometry(0.08, 0.08, 0.3, 6), { position: [0, 0.12, 0], color: gold })
-  p.box(0, -0.05, 0, 0.5, 0.14, 0.5, '#ffb01e', STYLE.SMOOTH)
-  return p.build()
-}
-
-/** White shattered-glass lines from a point near the screen's top, on a small canvas. */
-function createScreenCrackTexture() {
-  const canvas = document.createElement('canvas')
-  canvas.width = 128
-  canvas.height = 256
-  const g = canvas.getContext('2d')
-  const r = mulberry32(7)
-  const cx = 52
-  const cy = 92
-  g.strokeStyle = 'rgba(255,255,255,0.95)'
-  g.lineCap = 'round'
-  for (let i = 0; i < 11; i += 1) {
-    let a = (i / 11) * Math.PI * 2 + r() * 0.4
-    let x = cx
-    let y = cy
-    g.lineWidth = 3.2
-    g.beginPath()
-    g.moveTo(x, y)
-    const len = 50 + r() * 110
-    for (let d = 0; d < len; d += 12) {
-      a += (r() - 0.5) * 0.6
-      x += Math.cos(a) * 12
-      y += Math.sin(a) * 12
-      g.lineTo(x, y)
-    }
-    g.stroke()
-  }
-  // A ring of short cracks round the impact point.
-  g.lineWidth = 2
-  g.beginPath()
-  for (let i = 0; i <= 12; i += 1) {
-    const a = (i / 12) * Math.PI * 2
-    const rr = 14 + r() * 6
-    if (i === 0) g.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr)
-    else g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr)
-  }
-  g.stroke()
-  const texture = new CanvasTexture(canvas)
-  texture.colorSpace = SRGBColorSpace
-  texture.minFilter = LinearFilter
-  texture.generateMipmaps = false
-  return texture
-}
-
 /**
- * The falling phone: one merged mesh for the phone being dropped, rebuilt if that changes,
- * with a cracked-screen overlay on it that shows once it has smashed down onto its floor.
+ * The flying pancake's own material: glossy (the light catches its syrup and its top),
+ * lifted a little so it never goes dull against a dark sky, with a soft glowing rim in
+ * its pan's colour - the pancake hero of every launch. One material, one draw call.
  */
-function createPhoneMesh(id, crackTexture) {
+function createPancakeMaterial() {
+  const material = new MeshStandardMaterial({ vertexColors: true, roughness: 0.38, metalness: 0 })
+  material.userData.rim = { value: new Color('#ffe8b0') }
+  material.userData.rimStrength = { value: 0.9 }
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uRimColor = material.userData.rim
+    shader.uniforms.uRimStrength = material.userData.rimStrength
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 uRimColor;\nuniform float uRimStrength;')
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        float rimF = 1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
+        totalEmissiveRadiance += uRimColor * pow(rimF, 2.2) * uRimStrength + diffuseColor.rgb * 0.34;`,
+      )
+  }
+  material.customProgramCacheKey = () => 'pancake-hero-v1'
+  return material
+}
+
+/** Little stars orbiting the flying pancake: one instanced draw call, glowing in its pan's colour. */
+const ORBIT_STARS = 6
+function createOrbitStars() {
   const p = new PropBuilder()
-  addPhone(p, id, { scale: PHONE_SCALE })
-  const dims = phoneDims(id)
-  const mesh = asToyInstance(p.build(), sharedMaterials().toy)
-  mesh.matrixAutoUpdate = true
+  for (let i = 0; i < 4; i += 1) p.box(0, 0, 0, i % 2 ? 0.16 : 1, i % 2 ? 1 : 0.16, 0.12, '#ffffff', 0, [0, 0, (i * Math.PI) / 4])
+  const mesh = new InstancedMesh(p.build(), new MeshBasicMaterial({ color: '#fff3c0', toneMapped: false }), ORBIT_STARS)
   mesh.frustumCulled = false
   mesh.visible = false
-  const crack = new Mesh(
-    new PlaneGeometry((dims.width - 0.06) * PHONE_SCALE, (dims.length - 0.08) * PHONE_SCALE),
-    new MeshBasicMaterial({ map: crackTexture, transparent: true, depthWrite: false }),
-  )
-  crack.rotation.x = -Math.PI / 2
-  crack.position.y = (dims.thickness / 2 + 0.03) * PHONE_SCALE
-  crack.visible = false
-  crack.name = 'screen-crack'
-  mesh.add(crack)
-  mesh.userData.crack = crack
   return mesh
 }
 
-/** Where the camera sits (from the phone) and looks (from the phone) in each part of the drop. */
-function cameraAim(elapsed, outOffset, outLook) {
+/**
+ * The soft glow behind the flying pancake, in its pan's colour, so it stands out against
+ * every sky: a radial gradient on a small canvas, on a camera-facing quad (one draw call).
+ */
+function createHalo() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 64
+  const g = canvas.getContext('2d')
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+  grad.addColorStop(0, 'rgba(255,255,255,0.9)')
+  grad.addColorStop(0.35, 'rgba(255,255,255,0.45)')
+  grad.addColorStop(1, 'rgba(255,255,255,0)')
+  g.fillStyle = grad
+  g.fillRect(0, 0, 64, 64)
+  const texture = new CanvasTexture(canvas)
+  texture.colorSpace = SRGBColorSpace
+  const mesh = new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, blending: AdditiveBlending, color: '#ffe8b0' }))
+  mesh.frustumCulled = false
+  mesh.visible = false
+  mesh.renderOrder = 1
+  mesh.userData.texture = texture
+  return mesh
+}
+/** The flying hero drawn this much bigger than the pancake's own flight size: a star of the show. */
+const HERO_SIZE = 1.4
+const heroState = { t: 0, phase: '', sinceRelease: 0, stunned: false, sinceCatch: 1e9, steerVel: 0, speed: 0 }
+const _toCam = new Vector3()
+
+/** Where the camera sits (from the pancake) and looks (from the pancake) in each part of the launch. */
+function cameraAim(outOffset, outLook) {
   if (roll.phase === 'throw') {
-    // Over your shoulder at the edge, looking out and down at the hotel far below.
-    outOffset.set(1.4, 1.6, 5.2)
-    outLook.set(0, -18, -20)
+    // Behind you on the launch pad, low, looking up past you at the sky.
+    outOffset.set(1.2, 0.6, 9.5)
+    outLook.set(0, 3.5, -2)
   } else if (roll.phase === 'air') {
-    // Chasing it down through the sky: behind it at first, then above it, looking down.
-    const u = smoothstep(0, 1, (elapsed - T_RELEASE) / DROP_AIR)
-    outOffset.set(0.6 * (1 - u), 4 + 6.5 * u, 8 - 4.4 * u)
-    outLook.set(0, -3 - 2 * u, -3 * (1 - u))
-  } else if (roll.phase === 'tower') {
-    // Straight down through the hotel, just behind the phone so the camera comes through
-    // the holes it punches.
-    outOffset.set(0, 7.4, 2.1)
-    outLook.set(0, -1, -0.3)
+    // Below and behind the climbing pancake, looking up the sky at what's coming down.
+    outOffset.set(sky.steer * -0.45, -2.4, 10.5)
+    outLook.set(sky.steer * -0.3, 1.4, 0)
   } else {
-    // Stopped: close over the phone as it slams down, then drawing back to the south to
-    // take in the room it wrecked - its north wall, the crater, the rubble.
+    // At the top: level with it, drawing back a little to show it off.
     const since = Math.max(0, (performance.now() - roll.landedAt) / 1000)
-    const u = smoothstep(0.4, 1.8, since)
-    outOffset.set(0, 5.6 + 3 * u, 3.2 + 4.6 * u)
-    outLook.set(0, 0.5 * u, -0.2 - 2.6 * u)
+    const u = smoothstep(0, 1.6, since)
+    outOffset.set(0, -1.5 + 2 * u, 8 + 3 * u)
+    outLook.set(0, 0.6, 0)
   }
 }
 
 /**
- * Lazily loaded: everything below the cliff edge - the hotel and the city (Tower), the
- * falling phone, the debris, the trophies on the way down, the speed lines and the camera
- * while it falls. While nobody is dropping it still shows the hotel and the city far
- * below, which is what you see from the edge of the lobby.
+ * Lazily loaded: everything above the launch pad - the sky layers (SkyLayers), the
+ * flying pancake, the bubbles and grumpy clouds (SkyGameView), other players' pancakes
+ * shooting up, the speed lines and the camera while you launch.
  */
 export default function Roll() {
   const camera = useThree((s) => s.camera)
   const scene = useThree((s) => s.scene)
   const gl = useThree((s) => s.gl)
   const rootRef = useRef(null)
-  const trophyRef = useRef(null)
   const streakRef = useRef(null)
-  const phoneRef = useRef(null)
+  const pancakeRef = useRef(null)
+  const ghostRef = useRef(null)
+  const haloRef = useRef(null)
+  const orbitRef = useRef(null)
+  const haloTintFor = useRef(-1)
   const streakTintedFor = useRef(-1)
   const startedFor = useRef(0)
   const trophyTally = useRef({ next: TROPHY_FIRST, pending: 0, shownAt: 0 })
@@ -279,7 +261,6 @@ export default function Roll() {
   const equipped = useGame((s) => s.profile.equippedTire)
 
   const assets = useMemo(() => {
-    const trophies = createToyInstances(createTrophyGeometry(), sharedMaterials().toy, MAX_TROPHIES)
     const streakMaterial = new ShaderMaterial({
       uniforms: { uOpacity: { value: 0 } },
       vertexShader: streakVertexShader,
@@ -293,33 +274,43 @@ export default function Roll() {
     for (let i = 0; i < STREAKS; i += 1) streakMesh.setColorAt(i, WHITE)
     streakMesh.frustumCulled = false
     streakMesh.count = 0
-    return { trophies, streakMesh, streakMaterial }
+    // Other players' pancakes: one generic stack, all in one draw call.
+    const g = new PropBuilder()
+    addPancake(g, 'mint', { scale: PANCAKE_SCALE * 0.8 })
+    const ghosts = createToyInstances(g.build(), sharedMaterials().toy, MAX_GHOSTS)
+    return { streakMesh, streakMaterial, ghosts }
   }, [])
 
-  // The phone mesh for whichever phone is being dropped (your equipped one).
-  const crackTexture = useMemo(() => createScreenCrackTexture(), [])
-  useEffect(() => () => crackTexture.dispose(), [crackTexture])
-  const phone = useMemo(() => createPhoneMesh(equipped, crackTexture), [equipped, crackTexture])
+  const pancakeMaterial = useMemo(() => createPancakeMaterial(), [])
+  useEffect(() => () => pancakeMaterial.dispose(), [pancakeMaterial])
+  // The flying pancake: a cartoon hero with googly eyes, arms, legs, wings and a wizard's hat.
+  const hero = useMemo(() => createPancakeHero(equipped, pancakeMaterial), [equipped, pancakeMaterial])
+  const orbitStars = useMemo(() => createOrbitStars(), [])
   useEffect(
     () => () => {
-      const crack = phone.userData.crack
-      crack.geometry.dispose()
-      crack.material.dispose()
-      phone.geometry.dispose()
-      phone.dispose()
+      orbitStars.geometry.dispose()
+      orbitStars.material.dispose()
+      orbitStars.dispose()
     },
-    [phone],
+    [orbitStars],
   )
+  const halo = useMemo(() => createHalo(), [])
+  useEffect(
+    () => () => {
+      halo.geometry.dispose()
+      halo.material.dispose()
+      halo.userData.texture.dispose()
+    },
+    [halo],
+  )
+  useEffect(() => () => disposeHero(hero), [hero])
 
   // This module loads after the lobby is on screen; compile its shaders in the background
-  // before showing it, so the first drop doesn't stall on them.
+  // before showing it, so the first launch doesn't stall on them.
   useEffect(() => {
     const root = rootRef.current
     if (!root || import.meta.env.DEV) return undefined
     let cancelled = false
-    // compile() only gathers what's visible: the falling phone, its cracked screen and the
-    // effects all start hidden, so everything is shown for the gathering and hidden again
-    // straight after - otherwise their shaders compile mid-drop, the first time each shows.
     root.visible = true
     const hidden = []
     root.traverse((object) => {
@@ -344,11 +335,11 @@ export default function Roll() {
 
   useEffect(
     () => () => {
-      assets.trophies.geometry.dispose()
-      assets.trophies.dispose()
       assets.streakMesh.geometry.dispose()
       assets.streakMaterial.dispose()
       assets.streakMesh.dispose()
+      assets.ghosts.geometry.dispose()
+      assets.ghosts.dispose()
       showLobbySky(null)
     },
     [assets],
@@ -359,7 +350,7 @@ export default function Roll() {
     const settings = getQuality()
     const now = performance.now()
 
-    // --- The drop -----------------------------------------------------------------
+    // --- The launch ---------------------------------------------------------------
     let speed = 0
     if (roll.active) {
       advanceRoll(state.clock.elapsedTime)
@@ -368,7 +359,7 @@ export default function Roll() {
         startedFor.current = roll.startedAt
         // Ease from wherever the lobby camera was.
         camOffset.copy(camera.position).sub(p)
-        lookOffset.set(0, 0, -10)
+        lookOffset.set(0, 2, -6)
         baseFov.current = camera.fov
         const tally = trophyTally.current
         tally.next = TROPHY_FIRST
@@ -377,64 +368,136 @@ export default function Roll() {
         zoneShown.current = -2
       }
       speed = roll.speed
-      runtime.flightFocus = phoneFocus.copy(p)
+      // The pancake as you steer it: the column plus your sideways offset.
+      _p.set(p.x + sky.steer, p.y, p.z)
+      runtime.flightFocus = pancakeFocus.copy(_p)
       writeDistance(roll.meter)
-      // The floor's name as the phone comes into it.
+      // The layer's name as the pancake climbs into it.
       const zi = roll.roofBroken ? roll.floor : -1
       if (zi !== zoneShown.current) {
         zoneShown.current = zi
-        if (zi >= 0) writeZone(zi, zones()[zi].name, floorNameGradient(activeWorld(), zi))
+        if (zi >= 0) writeZone(zi, zones()[zi].name, floorNameGradient(zones(), zi))
         else writeZone(-1, ' ', 'linear-gradient(180deg, #ffffff, #ffffff)')
       }
+      if (roll.phase === 'air') sfx.windSet(Math.min(1, speed / 160), true, 0)
 
-      // The wind, swelling with the fall, gone once it stops.
-      if (roll.phase === 'air' || roll.phase === 'tower') {
-        sfx.windStart()
-        sfx.windSet(Math.min(1, speed / 90), true, 0)
-      } else if (roll.landed) {
-        sfx.windStop()
-      }
-
-      // The phone itself, once it has left your hand.
-      const mesh = phoneRef.current
+      const mesh = pancakeRef.current
       if (mesh) {
         mesh.visible = !roll.inHand
-        // Its screen cracks as it smashes down onto its floor.
-        const crack = mesh.children[0]
-        if (crack) crack.visible = roll.landed
         if (!roll.inHand) {
-          mesh.position.copy(p)
-          _q.setFromAxisAngle(_ay, roll.yaw)
+          mesh.position.copy(_p)
+          // Knocked by a cloud: it spins wildly for a moment.
+          const knock = stunned(now) ? (sky.stunUntil - now) / 60 : 0
+          _q.setFromAxisAngle(_ay, roll.yaw + knock * 0.8)
           _q.multiply(_qa.setFromAxisAngle(_ax, roll.tumble))
-          _q.multiply(_qa.setFromAxisAngle(_az, roll.tilt))
+          _q.multiply(_qa.setFromAxisAngle(_az, roll.tilt + sky.steerVel * -0.04 + knock * 0.3))
           mesh.quaternion.copy(_q)
+          // A squash and stretch with speed, round again at the top.
+          const stretch = Math.min(0.25, speed / 900)
+          const sinceCatch = now - sky.lastCatchAt
+          const pop = sinceCatch < 400 ? 1 + 0.28 * Math.exp(-sinceCatch / 90) : 1
+          const big = pop * HERO_SIZE
+          mesh.scale.set((1 - stretch * 0.4) * big, (1 + stretch) * big, (1 - stretch * 0.4) * big)
+          heroState.t = now / 1000
+          heroState.phase = roll.phase
+          heroState.sinceRelease = roll.releasedAt ? (now - roll.releasedAt) / 1000 : 0
+          heroState.stunned = stunned(now)
+          heroState.sinceCatch = sinceCatch
+          heroState.steerVel = sky.steerVel
+          heroState.speed = speed
+          animateHero(hero, heroState)
         }
       }
 
       if (runtime.camera.mode === 'roll') {
-        const elapsed = (now - roll.startedAt - roll.lag) / 1000
-        cameraAim(elapsed, _want, _wantLook)
-        // Quick to settle into each shot, quicker still once falling fast.
-        const k = 1 - Math.exp(-(roll.phase === 'throw' ? 5 : roll.phase === 'tower' ? 14 : 6) * delta)
+        cameraAim(_want, _wantLook)
+        // Eased: firm while climbing, softer before and at the top, ramping between so a
+        // phase change never snaps the shot.
+        const sinceRelease = roll.releasedAt ? (now - roll.releasedAt) / 1000 : 0
+        const rate = roll.phase === 'throw' ? 4 : roll.phase === 'air' ? 4 + 4 * Math.min(1, sinceRelease / 0.8) : 3.5
+        const k = 1 - Math.exp(-rate * delta)
         camOffset.lerp(_want, k)
         lookOffset.lerp(_wantLook, k)
-        const sinceHit = now - roll.hitAt
-        const amp =
-          (roll.phase === 'air' || roll.phase === 'tower' ? Math.min(1, speed / 90) * SPEED_SHAKE : 0) +
-          (sinceHit < HIT_SHAKE_MS * 3 ? HIT_SHAKE * Math.exp(-sinceHit / HIT_SHAKE_MS) : 0)
-        camera.position.set(p.x + camOffset.x + (Math.random() - 0.5) * amp, p.y + camOffset.y + (Math.random() - 0.5) * amp, p.z + camOffset.z)
-        camera.lookAt(_look.copy(p).add(lookOffset))
-        // The view widens with speed, and punches wider for a moment on every smash.
-        const punch = sinceHit < 500 ? 6 * Math.exp(-sinceHit / 120) : 0
-        const fov = baseFov.current + punch + (roll.phase === 'air' || roll.phase === 'tower' ? Math.min(FOV_KICK, speed * 0.12) : roll.landed ? -4 : 0)
+        const sinceHit = now - Math.max(roll.hitAt, sky.stunUntil - 750)
+        const amp = (roll.phase === 'air' ? Math.min(1, speed / 160) * SPEED_SHAKE : 0) + (sinceHit < HIT_SHAKE_MS * 3 ? HIT_SHAKE * Math.exp(-sinceHit / HIT_SHAKE_MS) : 0)
+        // A smooth wobble (a sum of waves), never per-frame noise: shake that reads as speed, not jitter.
+        const t = now / 1000
+        const wx = Math.sin(t * 31) * 0.6 + Math.sin(t * 47 + 1.3) * 0.4
+        const wy = Math.sin(t * 37 + 0.7) * 0.6 + Math.sin(t * 53 + 2.1) * 0.4
+        camera.position.set(_p.x + camOffset.x + wx * amp * 0.5, _p.y + camOffset.y + wy * amp * 0.5, _p.z + camOffset.z)
+        camera.lookAt(_look.copy(_p).add(lookOffset))
+        if (roll.phase === 'air') camera.rotateZ(Math.max(-0.12, Math.min(0.12, -sky.steerVel * 0.009)))
+        const punch = now - roll.landedAt < 500 ? 6 * Math.exp(-(now - roll.landedAt) / 120) : 0
+        const fov = baseFov.current + punch + (roll.phase === 'air' ? Math.min(FOV_KICK, speed * 0.05) : roll.landed ? -3 : 0)
         const lens = state.camera
         if (Math.abs(fov - lens.fov) > 0.05) {
           lens.fov += (fov - lens.fov) * (1 - Math.exp(-4 * delta))
           lens.updateProjectionMatrix()
         }
       }
-    } else if (phoneRef.current) {
-      phoneRef.current.visible = false
+
+      // Trophies passed on the way up: the Trophies came with the launch; this is the receipt.
+      if (roll.roofBroken) {
+        const tally = trophyTally.current
+        while (tally.next <= Math.min(roll.meter, roll.distance)) {
+          tally.pending += trophyValue(tally.next, activeWorld())
+          tally.next += TROPHY_SPACING
+        }
+        if (tally.pending > 0 && now - tally.shownAt >= TROPHY_POPUP_MS * 3) {
+          const multiplier = winsMultiplier(getGame().profile, Date.now())
+          spawnScattered(`+${formatNumber(Math.round(tally.pending * multiplier))}`, TROPHY_POPUP)
+          sfx.trophy()
+          tally.pending = 0
+          tally.shownAt = now
+        }
+      }
+    } else if (pancakeRef.current) {
+      pancakeRef.current.visible = false
+    }
+
+    // Stars orbiting the pancake, twinkling, swinging wide on every bubble.
+    const stars = orbitRef.current
+    if (stars) {
+      const show = roll.active && !roll.inHand
+      stars.visible = show
+      if (show) {
+        const sinceCatch = now - sky.lastCatchAt
+        const wide = 1 + (sinceCatch < 600 ? 0.6 * Math.exp(-sinceCatch / 200) : 0)
+        for (let i = 0; i < ORBIT_STARS; i += 1) {
+          const a = now / 700 + (i / ORBIT_STARS) * Math.PI * 2
+          const r = PANCAKE_SCALE * HERO_SIZE * 1.15 * wide
+          _v.set(_p.x + Math.cos(a) * r, _p.y + Math.sin(a * 2 + i) * 0.6, _p.z + Math.sin(a) * r)
+          _q.copy(camera.quaternion).multiply(_qa.setFromAxisAngle(_az, now / 300 + i))
+          _s.setScalar(0.32 + 0.14 * Math.sin(now / 160 + i * 1.7))
+          stars.setMatrixAt(i, _m.compose(_v, _q, _s))
+        }
+        stars.instanceMatrix.needsUpdate = true
+      }
+    }
+
+    // The glow behind the pancake: just behind it from the camera, breathing gently, a
+    // flash brighter on every bubble.
+    const glow = haloRef.current
+    if (glow) {
+      const show = roll.active && !roll.inHand
+      glow.visible = show
+      if (show) {
+        if (haloTintFor.current !== roll.startedAt) {
+          haloTintFor.current = roll.startedAt
+          glow.material.color.set(phoneTrail(roll.tireId)).lerp(WHITE, 0.3)
+          pancakeMaterial.userData.rim.value.set(phoneTrail(roll.tireId)).lerp(WHITE, 0.35)
+          hero.wingMaterial.color.set(phoneTrail(roll.tireId)).lerp(WHITE, 0.6)
+          const stars = orbitRef.current
+          if (stars) stars.material.color.set(phoneTrail(roll.tireId)).lerp(WHITE, 0.55)
+        }
+        _toCam.copy(camera.position).sub(_p).normalize()
+        glow.position.copy(_p).addScaledVector(_toCam, -1.2)
+        glow.quaternion.copy(camera.quaternion)
+        const sinceCatch = now - sky.lastCatchAt
+        const flash = sinceCatch < 500 ? 0.35 * Math.exp(-sinceCatch / 150) : 0
+        glow.scale.setScalar(PANCAKE_SCALE * HERO_SIZE * (2.3 + 0.12 * Math.sin(now / 260) + flash * 2))
+        glow.material.opacity = 0.55 + flash
+      }
     }
     if (wasActive.current && !roll.active) {
       state.camera.fov = baseFov.current
@@ -444,46 +507,33 @@ export default function Roll() {
     }
     wasActive.current = roll.active
 
-    // --- Trophies on the way down -----------------------------------------------------
-    const trophies = trophyRef.current
-    if (trophies) {
-      let count = 0
-      if (roll.active && roll.roofBroken) {
-        // Tally the ones just passed: the Wins came with the drop; this is the receipt.
-        const tally = trophyTally.current
-        while (tally.next <= Math.min(roll.meter, roll.distance)) {
-          tally.pending += trophyValue(tally.next, activeWorld())
-          tally.next += TROPHY_SPACING
-        }
-        if (tally.pending > 0 && now - tally.shownAt >= TROPHY_POPUP_MS) {
-          const multiplier = winsMultiplier(getGame().profile, Date.now())
-          spawnScattered(`+${formatNumber(Math.round(tally.pending * multiplier))}`, TROPHY_POPUP)
-          sfx.trophy()
-          tally.pending = 0
-          tally.shownAt = now
-        }
-        // The next few still below the phone, spinning on its path.
-        const spin = now * 0.004
-        for (let m = tally.next; m <= roll.distance && count < MAX_TROPHIES; m += TROPHY_SPACING) {
-          const y = yAtMeter(m, roll.distance, roll.end)
-          if (y < roll.position.y - 70) break
-          _p.set(roll.position.x, y + 0.5, roll.position.z)
-          _q.setFromAxisAngle(_ay, spin + m)
-          _s.setScalar(1.6)
-          trophies.setMatrixAt(count, _m.compose(_p, _q, _s))
-          count += 1
-        }
+    // --- Other players' pancakes, shooting up from their launch pads -------------
+    const ghosts = ghostRef.current
+    if (ghosts) {
+      let n = 0
+      for (const g of runtime.ghostRolls.values()) {
+        if (n >= MAX_GHOSTS) break
+        const t = (now - g.startedAt) / 1000
+        if (t < T_RELEASE || t > g.duration + ROLL_RECOVERY) continue
+        const y = heightAt(t, g)
+        // Over the launch pad, a little to the side where they stood in the zone.
+        _p.set(COLUMN.x + Math.max(-5, Math.min(5, g.x ?? 0)), y, COLUMN.z - 1)
+        _q.setFromAxisAngle(_ax, t * 9)
+        _s.setScalar(1)
+        ghosts.setMatrixAt(n, _m.compose(_p, _q, _s))
+        n += 1
       }
-      trophies.count = count
-      trophies.instanceMatrix.needsUpdate = true
+      ghosts.count = n
+      ghosts.visible = n > 0
+      ghosts.instanceMatrix.needsUpdate = true
     }
 
     // --- Speed lines --------------------------------------------------------------
-    const falling = roll.active && (roll.phase === 'air' || roll.phase === 'tower')
-    writeSpeed(falling ? smoothstep(STREAKS_FROM, STREAKS_FULL * 1.5, speed) : 0, now)
+    const climbing = roll.active && roll.phase === 'air'
+    writeSpeed(climbing ? smoothstep(STREAKS_FROM, STREAKS_FULL * 2, speed) : 0, now)
     const lines = streakRef.current
     if (lines) {
-      if (!(falling && settings.speedLines && speed > STREAKS_FROM)) {
+      if (!(climbing && settings.speedLines && speed > STREAKS_FROM)) {
         lines.count = 0
       } else {
         if (streakTintedFor.current !== roll.startedAt) {
@@ -493,8 +543,8 @@ export default function Roll() {
           lines.instanceColor.needsUpdate = true
         }
         const fast = Math.min(speed, 300)
-        lines.material.uniforms.uOpacity.value = smoothstep(STREAKS_FROM, STREAKS_FULL, speed)
-        const travel = fast * delta * 0.6
+        lines.material.uniforms.uOpacity.value = smoothstep(STREAKS_FROM, STREAKS_FULL, speed) * 0.8
+        const travel = fast * delta * 0.4
         lines.count = STREAKS
         for (let i = 0; i < STREAKS; i += 1) {
           const st = streakState[i]
@@ -513,11 +563,15 @@ export default function Roll() {
 
   return (
     <group ref={rootRef}>
-      <Tower />
-      <Debris />
+      <SkyLayers />
+      <SkyClouds />
+      <SkyGameView />
+      <FlightFx />
       <FireBurst />
-      <primitive ref={phoneRef} object={phone} />
-      <primitive ref={trophyRef} object={assets.trophies} />
+      <primitive ref={haloRef} object={halo} />
+      <primitive ref={pancakeRef} object={hero.group} />
+      <primitive ref={orbitRef} object={orbitStars} />
+      <primitive ref={ghostRef} object={assets.ghosts} />
       <primitive ref={streakRef} object={assets.streakMesh} />
       {rolling && motionBlur > 0 && <SpeedBlur samples={motionBlur} antialias={antialias} />}
     </group>

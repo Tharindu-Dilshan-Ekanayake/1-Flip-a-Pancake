@@ -1,8 +1,9 @@
-import { comboBonus, crowdBonus, dayNumber, EGGS, hitGrade, ITEMS, MULTI_HATCH, PADS, SHOP, TIRES, TOSS_COOLDOWN, ZONES } from './balance.js'
+import { bubbleCount, WORLDS, comboBonus, crowdBonus, dayNumber, EGGS, hitGrade, ITEMS, MULTI_HATCH, PADS, SHOP, TIRES, TOSS_COOLDOWN, ZONES } from './balance.js'
 import { applyStreak, claimQuest, claimQuestBonus, ensureQuests, progressQuests, questText, rollLuckyGift } from './engage.js'
 import {
   advanceTutorial,
   applyAdReward,
+  applyBubble,
   applyGemProduct,
   applyRebirth,
   applyRoll,
@@ -29,7 +30,7 @@ import {
   usePortal,
   usePotion,
 } from './logic.js'
-import { eggStandNear, FREE_REWARD, inRect, inRollZone, onPad, portalAt, STAR, standRect, TIRE_STANDS } from './world.js'
+import { eggAt, eggStandNear, FREE_REWARD, inRect, inRollZone, onPad, portalAt, STAR, standRect, TIRE_STANDS } from './world.js'
 
 const TIRE_INDEX = Object.fromEntries(TIRES.map((t, i) => [t.id, i]))
 /** Reaching the hotel's deluxe floors (floor 21) earns its badge; the last floor has its own. */
@@ -112,6 +113,8 @@ export class PlayerSession {
     this.nextTossAt = 0
     /** Server time until which the player's phone is out (and its result) and can't drop again. */
     this.busyUntil = 0
+    /** The launch in flight: when it started and ends, how many bubbles it has, which were caught. */
+    this.flight = null
     this.dirty = false
   }
 
@@ -224,6 +227,7 @@ export class PlayerSession {
       const result = applyRoll(this.profile, now, accuracy, comboBonus(combo) * crowdBonus(others))
       const gift = rollLuckyGift(this.profile, this.rand)
       this.busyUntil = now + result.cooldown * 1000
+      this.flight = { startedAt: now, endsAt: now + result.duration * 1000, count: bubbleCount(result.duration), caught: new Set() }
       this.pad = -1
       this.emit('roll', {
         distance: result.distance,
@@ -258,6 +262,21 @@ export class PlayerSession {
       if (this.profile.stats.bestZone >= ZONES.length - 1) this.badge('cosmic')
     },
 
+    /**
+     * A strength bubble caught mid-flight (the client steers; see balance BUBBLE_*). Only
+     * during your own launch, each bubble once, never more than the launch has.
+     */
+    bubble({ index }, now) {
+      const f = this.flight
+      const i = Number(index)
+      if (!f || !Number.isInteger(i) || i < 0 || i >= f.count || f.caught.has(i)) return
+      // A little slack either side for latency.
+      if (now < f.startedAt - 500 || now > f.endsAt + 1500) return
+      f.caught.add(i)
+      const result = applyBubble(this.profile, now)
+      this.gain('bubble', -1, result)
+    },
+
     buyTire({ id }) {
       if (!this.nearStandFor(id)) return
       const result = buyTire(this.profile, id)
@@ -282,7 +301,7 @@ export class PlayerSession {
       const egg = EGGS[eggId]
       if (!egg) return
       const p = this.getPosition()
-      if (eggStandNear(p.x, p.z)?.eggId !== eggId) return
+      if (eggAt(eggStandNear(p.x, p.z), this.profile.world || 0) !== eggId) return
       const n = count === MULTI_HATCH ? MULTI_HATCH : 1
       this.reveal(hatchEgg(this.profile, eggId, n))
     },
@@ -338,14 +357,16 @@ export class PlayerSession {
       this.badge('secretStar')
     },
 
-    portal() {
+    /** Travels through the portal to `world` (an index into WORLDS; the template's toggle without one). */
+    portal(payload) {
       const p = this.getPosition()
       const portal = portalAt(p.x, p.z, 2)
       if (!portal) return
-      const result = usePortal(this.profile)
+      const target = Number.isInteger(payload?.world) ? payload.world : undefined
+      const result = usePortal(this.profile, target)
       if (!result.ok) return
       this.dirty = true
-      if (result.world === 1) this.badge(portal.id)
+      if (result.first) this.badge(WORLDS[result.world].id)
       this.emit('world', { world: result.world, first: Boolean(result.first) })
     },
 

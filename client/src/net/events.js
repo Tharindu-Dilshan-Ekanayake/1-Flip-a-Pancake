@@ -1,3 +1,4 @@
+import { PORTALS } from '@shared/world'
 import { TIRES, TUTORIAL, WORLDS } from '@shared/balance'
 import { formatNumber } from '@shared/format'
 
@@ -38,7 +39,7 @@ export function handleServerEvent(type, payload) {
         const tire = TIRES.find((t) => t.id === payload.profile.equippedTire)
         // The first phone bought ends the tutorial: say so too.
         const done = before.tutorialStep < TUTORIAL.length && payload.profile.tutorialStep >= TUTORIAL.length
-        if (tire) game.showToast(`NEW PHONE: ${tire.name}!${done ? ' Tutorial complete - have fun!' : ''}`)
+        if (tire) game.showToast(`NEW PAN: ${tire.name}!${done ? ' Tutorial complete - have fun!' : ''}`)
       }
       break
     }
@@ -72,7 +73,7 @@ export function handleServerEvent(type, payload) {
     case 'streak':
       // Played past midnight: the streak's next day starts now.
       sfx.wins()
-      game.showToast(`DAY ${payload.days} STREAK! x${payload.multiplier.toFixed(1)} Wins on every drop`)
+      game.showToast(`DAY ${payload.days} STREAK! x${payload.multiplier.toFixed(1)} Trophies on every launch`)
       break
 
     case 'pack':
@@ -104,7 +105,7 @@ export function handleServerEvent(type, payload) {
       sfx.wins()
       sfx.levelUp()
       burst({ ...atPlayer(2), count: 70, palette: 'gold', speed: 10 })
-      game.showToast('SECRET STAR FOUND! x2 SKILL FOREVER!')
+      game.showToast('SECRET STAR FOUND! x2 STRENGTH FOREVER!')
       break
     }
 
@@ -115,10 +116,14 @@ export function handleServerEvent(type, payload) {
       sfx.rebirth()
       burst({ ...atPlayer(2), count: 60, palette: 'confetti', speed: 9 })
       const world = WORLDS[payload.world]
+      // Out in front of the portal, so walking back in opens the picker again.
+      runtime.player.position.set(PORTALS[0].x, 0, PORTALS[0].z + 7)
+      runtime.camera.snap = true
+      const star = payload.world === 1 && payload.first ? ' A Secret Star is hidden here...' : ''
       game.showToast(
-        payload.world === 1
-          ? `WELCOME TO ${world.name.toUpperCase()}! x${world.wins} Wins on every drop!${payload.first ? ' A Secret Star is hidden here...' : ''}`
-          : `Back in ${world.name}!`,
+        payload.world === 0
+          ? `Back in ${world.name}!`
+          : `${payload.first ? 'NEW WORLD! ' : ''}WELCOME TO ${world.name.toUpperCase()}! x${world.wins} Trophies on every launch!${star}`,
       )
       break
     }

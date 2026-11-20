@@ -10,9 +10,10 @@ import { sfx } from '../audio/sfx'
 import { getGame, useGame } from '../store/game'
 import ErrorBoundary from '../ui/ErrorBoundary'
 import FallbackAvatar from './FallbackAvatar'
+import { showPancake } from './handPhone'
 import HeldPhone from './HeldPhone'
 import PlayerAvatar from './PlayerAvatar'
-import { releasePoint, spawnThrow, THROW_RELEASE, TOSS_TIME, tossTarget } from './practice'
+import { pancakeUp, releasePoint, spawnThrow, THROW_RELEASE, TOSS_TIME, tossTarget } from './practice'
 import { cancelPull, isPulling, launch, updatePull } from './launch'
 import { roll } from './roll/rollControl'
 import { runtime } from './runtime'
@@ -215,6 +216,10 @@ export function Player({ onAvatarReady }) {
       pos.y = floor
       vy.current = 0
       player.grounded = true
+    } else if (player.grounded && vy.current <= 0 && pos.y - floor < 0.62) {
+      // Walking down a slope (the launch pit): keep the feet on it rather than falling.
+      pos.y = floor
+      vy.current = 0
     } else if (pos.y - floor > 0.05) {
       player.grounded = false
     }
@@ -243,9 +248,8 @@ export function Player({ onAvatarReady }) {
       tossF = 0
     }
     const tossing = !still && tossF >= 0 && tossF < 1
-    // The phone's gone from your hand from the moment you let it fly until you reach for the next.
-    const thrown = tossing && tossF >= THROW_RELEASE
-    if (handRef.current) handRef.current.visible = !(roll.active && !roll.inHand) && !thrown
+    // The pan stays in your hand; its pancake is gone from it while it's up in the air.
+    showPancake(handRef.current, !(roll.active && !roll.inHand) && !(tossing && pancakeUp(tossF)))
 
     if (group && visual) {
       // Step-ups ease in over a few frames on the visual only; the logical position

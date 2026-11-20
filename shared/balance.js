@@ -87,7 +87,7 @@ export const REBIRTH_GIFT_EVERY = 5
 export function rebirthGift(rebirths) {
   if (rebirths < REBIRTH_GIFT_FROM || (rebirths - REBIRTH_GIFT_FROM) % REBIRTH_GIFT_EVERY !== 0) return null
   const amount = Math.min(6, 3 + Math.floor((rebirths - REBIRTH_GIFT_FROM) / 10))
-  return { rebirths, item: 'eggVolcano', amount, label: `${amount} Volcano Eggs` }
+  return { rebirths, item: 'eggVolcano', amount, label: `${amount} Toaster Eggs` }
 }
 /** The next rebirth after `rebirths` that brings a gift, and the gift. */
 export function nextRebirthGift(rebirths) {
@@ -110,17 +110,17 @@ export const REBIRTH_SKIP_ROLLS = 10
  * World 1 as a teaser).
  */
 export const PADS = [
-  { id: 'starter', name: 'Basic Throw Pad', mult: 1, rebirths: 0 },
-  { id: 'speed', name: 'Bouncy Throw Pad', mult: 2, rebirths: 1 },
-  { id: 'turbo', name: 'Turbo Throw Pad', mult: 4, rebirths: 2 },
-  { id: 'nitro', name: 'Steel Throw Pad', mult: 10, rebirths: 4 },
-  { id: 'rocket', name: 'Rocket Throw Pad', mult: 20, rebirths: 6 },
-  { id: 'diamond', name: 'Crystal Throw Pad', mult: 40, product: 'padVeryOp', tag: 'VERY OP!' },
-  { id: 'galaxy', name: 'Galaxy Throw Pad', mult: 100, product: 'padBest', tag: 'BEST OVERALL!' },
+  { id: 'starter', name: '1 KG Flip Mat', mult: 1, rebirths: 0 },
+  { id: 'speed', name: '2 KG Flip Mat', mult: 2, rebirths: 1 },
+  { id: 'turbo', name: '4 KG Flip Mat', mult: 4, rebirths: 2 },
+  { id: 'nitro', name: '10 KG Flip Mat', mult: 10, rebirths: 4 },
+  { id: 'rocket', name: '20 KG Flip Mat', mult: 20, rebirths: 6 },
+  { id: 'diamond', name: '40 KG Crystal Mat', mult: 40, product: 'padVeryOp', tag: 'VERY OP!' },
+  { id: 'galaxy', name: '100 KG Galaxy Mat', mult: 100, product: 'padBest', tag: 'BEST OVERALL!' },
   // Kept close to the Galaxy Throw Pad: every Skill multiplier here speeds up the whole
   // late game (scripts/balance-sim.mjs) - the beach pads are milestones, not a jump.
-  { id: 'surf', name: 'Surf Throw Pad', mult: 115, rebirths: 10, world: 1 },
-  { id: 'tsunami', name: 'Tsunami Throw Pad', mult: 130, rebirths: 16, world: 1 },
+  { id: 'surf', name: '115 KG Surf Mat', mult: 115, rebirths: 10, world: 1 },
+  { id: 'tsunami', name: '130 KG Tsunami Mat', mult: 130, rebirths: 16, world: 1 },
 ]
 
 // --- Phones (the template's tires) -------------------------------------------------
@@ -136,31 +136,31 @@ export const PADS = [
  * (saves and the server key on them). How each one looks: client/src/game/phoneStyles.js.
  */
 export const TIRES = [
-  { id: 'bicycle', name: 'Button Phone', power: 1, cost: 0, rarity: 'common' },
+  { id: 'bicycle', name: 'Cast Iron Strengthet', power: 1, cost: 0, rarity: 'common' },
   // Cheap enough to buy with the Wins from your very first drop.
-  { id: 'mountain', name: 'Flip Phone', power: 3, cost: 1, rarity: 'common' },
-  { id: 'wood', name: 'Slider Phone', power: 5, cost: 15, rarity: 'common' },
-  { id: 'stone', name: 'Keyboard Phone', power: 12, cost: 75, rarity: 'uncommon' },
-  { id: 'cookie', name: 'Touch Phone', power: 30, cost: 300, rarity: 'uncommon' },
-  { id: 'pizza', name: 'Phone 3G', power: 75, cost: 1200, rarity: 'rare' },
-  { id: 'donut', name: 'Phone 4', power: 200, cost: 4500, rarity: 'rare' },
-  { id: 'watermelon', name: 'Phone 5', power: 500, cost: 16000, rarity: 'rare' },
-  { id: 'monster', name: 'Phone 6 Plus', power: 1250, cost: 55000, rarity: 'epic' },
-  { id: 'mint', name: 'Phone 7', power: 3500, cost: 180000, rarity: 'epic' },
-  { id: 'silver', name: 'Phone 8', power: 9000, cost: 600000, rarity: 'epic' },
-  { id: 'ice', name: 'Phone X', power: 23000, cost: 2e6, rarity: 'epic' },
-  { id: 'gold', name: 'Phone XS Max', power: 60000, cost: 6e6, rarity: 'legendary' },
-  { id: 'lava', name: 'Phone 11 Pro', power: 155000, cost: 17e6, rarity: 'legendary' },
-  { id: 'platinum', name: 'Phone 12 Pro', power: 400000, cost: 48e6, rarity: 'legendary' },
-  { id: 'emerald', name: 'Phone 13 Pro Max', power: 1.05e6, cost: 135e6, rarity: 'legendary' },
-  { id: 'ruby', name: 'Phone 14 Pro', power: 2.7e6, cost: 380e6, rarity: 'mythic' },
-  { id: 'diamond', name: 'Phone 15 Pro Max', power: 7e6, cost: 1.05e9, rarity: 'mythic' },
-  { id: 'rainbow', name: 'Phone 16 Pro', power: 1.8e7, cost: 3e9, rarity: 'mythic' },
-  { id: 'unicorn', name: 'Phone 16 Pro Max', power: 4.8e7, cost: 8.5e9, rarity: 'mythic' },
-  { id: 'galaxy', name: 'Phone 17 Pro', power: 1.25e8, cost: 2.4e10, rarity: 'secret' },
-  { id: 'dragon', name: 'Phone 17 Pro Max', power: 3.3e8, cost: 6.8e10, rarity: 'secret' },
-  { id: 'cosmic', name: 'Phone 18 Pro', power: 8.6e8, cost: 1.9e11, rarity: 'secret' },
-  { id: 'infinity', name: 'Phone 18 Pro Max', power: 2.2e9, cost: 5.4e11, rarity: 'secret' },
+  { id: 'mountain', name: 'Copper Pan', power: 3, cost: 1, rarity: 'common' },
+  { id: 'wood', name: 'Strawberry Pan', power: 5, cost: 15, rarity: 'common' },
+  { id: 'stone', name: 'Blueberry Pan', power: 12, cost: 75, rarity: 'uncommon' },
+  { id: 'cookie', name: 'Mint Pan', power: 30, cost: 300, rarity: 'uncommon' },
+  { id: 'pizza', name: 'Banana Pan', power: 75, cost: 1200, rarity: 'rare' },
+  { id: 'donut', name: 'Chocolate Pan', power: 200, cost: 4500, rarity: 'rare' },
+  { id: 'watermelon', name: 'Lemon Pan', power: 500, cost: 16000, rarity: 'rare' },
+  { id: 'monster', name: 'Matcha Pan', power: 1250, cost: 55000, rarity: 'epic' },
+  { id: 'mint', name: 'Caramel Pan', power: 3500, cost: 180000, rarity: 'epic' },
+  { id: 'silver', name: 'Bubblegum Pan', power: 9000, cost: 600000, rarity: 'epic' },
+  { id: 'ice', name: 'Honey Pan', power: 23000, cost: 2e6, rarity: 'epic' },
+  { id: 'gold', name: 'Lava Pan', power: 60000, cost: 6e6, rarity: 'legendary' },
+  { id: 'lava', name: 'Frost Pan', power: 155000, cost: 17e6, rarity: 'legendary' },
+  { id: 'platinum', name: 'Emerald Pan', power: 400000, cost: 48e6, rarity: 'legendary' },
+  { id: 'emerald', name: 'Ruby Pan', power: 1.05e6, cost: 135e6, rarity: 'legendary' },
+  { id: 'ruby', name: 'Sapphire Pan', power: 2.7e6, cost: 380e6, rarity: 'mythic' },
+  { id: 'diamond', name: 'Diamond Pan', power: 7e6, cost: 1.05e9, rarity: 'mythic' },
+  { id: 'rainbow', name: 'Rainbow Pan', power: 1.8e7, cost: 3e9, rarity: 'mythic' },
+  { id: 'unicorn', name: 'Unicorn Pan', power: 4.8e7, cost: 8.5e9, rarity: 'mythic' },
+  { id: 'galaxy', name: 'Galaxy Pan', power: 1.25e8, cost: 2.4e10, rarity: 'secret' },
+  { id: 'dragon', name: 'Dragon Pan', power: 3.3e8, cost: 6.8e10, rarity: 'secret' },
+  { id: 'cosmic', name: 'Cosmic Pan', power: 8.6e8, cost: 1.9e11, rarity: 'secret' },
+  { id: 'infinity', name: 'Infinity Pan', power: 2.2e9, cost: 5.4e11, rarity: 'secret' },
 ]
 
 // --- Dropping (the template's rolls) -----------------------------------------------
@@ -184,8 +184,11 @@ export const ROLL_H0 = 50
 /** A floor's `wall` is this many times the Skill that just reaches its top. */
 export const WALL_MARGIN = 1.3
 
-/** Room themes (client/src/game/roll/roomThemes.js builds each one's furniture). */
-export const ROOM_THEMES = ['pool', 'lounge', 'bedroom', 'bathroom', 'kitchen', 'dining', 'library', 'gym', 'arcade', 'cinema', 'spa', 'ballroom', 'office', 'music', 'kids', 'garden', 'laundry', 'aquarium', 'art', 'vault']
+/**
+ * The sky's worlds, bottom to top: every layer belongs to one (its `theme`), and each world
+ * fills the sky round the pancake with its own scenery (client/src/game/roll/skyThemes.js).
+ */
+export const ROOM_THEMES = ['forest', 'candy', 'clouds', 'diamond', 'honey', 'ice', 'space', 'galaxy', 'rainbow', 'dream', 'sun', 'infinity']
 
 /**
  * The hotel's sixty floors, top to bottom: [id, name, room theme, top (metres below the
@@ -199,67 +202,94 @@ export const ROOM_THEMES = ['pool', 'lounge', 'bedroom', 'bathroom', 'kitchen', 
  * template and no longer paid. Numbers from scripts/gen-stages.py.
  */
 const FLOOR_TABLE = [
-  ['sunroom-pool', 'Sunroom Pool', 'pool', 0, 0, 0.006, 0, 0],
-  ['sky-lounge', 'Sky Lounge', 'lounge', 100, 11, 0.0072, 2, 5],
-  ['starlight-suite', 'Starlight Suite', 'bedroom', 200, 21, 0.00984, 3, 7],
-  ['marble-bathroom', 'Marble Bathroom', 'bathroom', 306, 41, 0.0135, 4, 9],
-  ['chef-kitchen', 'Chef Kitchen', 'kitchen', 418, 79, 0.0185, 5, 13],
-  ['grand-dining-hall', 'Grand Dining Hall', 'dining', 536, 150, 0.0255, 7, 18],
-  ['quiet-library', 'Quiet Library', 'library', 660, 300, 0.0351, 10, 24],
-  ['fitness-club', 'Fitness Club', 'gym', 790, 590, 0.0486, 13, 34],
-  ['pixel-arcade', 'Pixel Arcade', 'arcade', 926, 1200, 0.0673, 19, 47],
-  ['movie-theater', 'Movie Theater', 'cinema', 1068, 2300, 0.0934, 26, 65],
-  ['lotus-spa', 'Lotus Spa', 'spa', 1216, 4600, 0.13, 36, 90],
-  ['crystal-ballroom', 'Crystal Ballroom', 'ballroom', 1370, 9200, 0.181, 50, 130],
-  ['board-room', 'Board Room', 'office', 1530, 18000, 0.253, 70, 180],
-  ['music-studio', 'Music Studio', 'music', 1696, 37000, 0.355, 99, 250],
-  ['kids-club', 'Kids Club', 'kids', 1868, 75000, 0.498, 140, 350],
-  ['indoor-garden', 'Indoor Garden', 'garden', 2046, 150000, 0.7, 190, 490],
-  ['laundry-room', 'Laundry Room', 'laundry', 2230, 310000, 0.987, 270, 690],
-  ['shark-aquarium', 'Shark Aquarium', 'aquarium', 2420, 640000, 1.39, 390, 970],
-  ['art-gallery', 'Art Gallery', 'art', 2616, 1.3e6, 1.97, 550, 1400],
-  ['hotel-vault', 'Hotel Vault', 'vault', 2818, 2.7e6, 2.8, 780, 1900],
-  ['lagoon-pool', 'Lagoon Pool', 'pool', 3026, 5.7e6, 3.98, 1100, 2800],
-  ['velvet-lounge', 'Velvet Lounge', 'lounge', 3240, 1.2e7, 5.66, 1600, 3900],
-  ['honeymoon-suite', 'Honeymoon Suite', 'bedroom', 3460, 2.5e7, 8.08, 2200, 5600],
-  ['golden-bathroom', 'Golden Bathroom', 'bathroom', 3686, 5.3e7, 11.6, 3200, 8000],
-  ['pastry-kitchen', 'Pastry Kitchen', 'kitchen', 3918, 1.1e8, 16.6, 4600, 12000],
-  ['banquet-hall', 'Banquet Hall', 'dining', 4156, 2.4e8, 23.8, 6600, 17000],
-  ['ancient-archive', 'Ancient Archive', 'library', 4400, 5.1e8, 34.2, 9500, 24000],
-  ['boxing-gym', 'Boxing Gym', 'gym', 4650, 1.1e9, 49.3, 14000, 34000],
-  ['retro-arcade', 'Retro Arcade', 'arcade', 4906, 2.3e9, 71.3, 20000, 50000],
-  ['giant-screen-theater', 'Giant Screen Theater', 'cinema', 5168, 5e9, 103, 29000, 72000],
-  ['hot-spring-spa', 'Hot Spring Spa', 'spa', 5436, 1.1e10, 150, 42000, 100000],
-  ['disco-ballroom', 'Disco Ballroom', 'ballroom', 5710, 2.4e10, 218, 60000, 150000],
-  ['tech-lab', 'Tech Lab', 'office', 5990, 5.2e10, 317, 88000, 220000],
-  ['rock-stage', 'Rock Stage', 'music', 6276, 1.1e11, 462, 130000, 320000],
-  ['toy-room', 'Toy Room', 'kids', 6568, 2.5e11, 676, 190000, 470000],
-  ['jungle-atrium', 'Jungle Atrium', 'garden', 6866, 5.6e11, 990, 270000, 690000],
-  ['steam-laundry', 'Steam Laundry', 'laundry', 7170, 1.2e12, 1450, 400000, 1e6],
-  ['jellyfish-tank', 'Jellyfish Tank', 'aquarium', 7480, 2.8e12, 2140, 590000, 1.5e6],
-  ['sculpture-hall', 'Sculpture Hall', 'art', 7796, 6.2e12, 3150, 870000, 2.2e6],
-  ['diamond-vault', 'Diamond Vault', 'vault', 8118, 1.4e13, 4650, 1.3e6, 3.2e6],
-  ['neon-pool', 'Neon Pool', 'pool', 8446, 3.2e13, 6870, 1.9e6, 4.8e6],
-  ['night-club', 'Night Club', 'lounge', 8780, 7.2e13, 10200, 2.8e6, 7.1e6],
-  ['king-chamber', 'King Chamber', 'bedroom', 9120, 1.6e14, 15100, 4.2e6, 1e7],
-  ['crystal-washroom', 'Crystal Washroom', 'bathroom', 9466, 3.7e14, 22500, 6.2e6, 1.6e7],
-  ['robot-kitchen', 'Robot Kitchen', 'kitchen', 9818, 8.6e14, 33500, 9.3e6, 2.3e7],
-  ['feast-hall', 'Feast Hall', 'dining', 10176, 2e15, 50000, 1.4e7, 3.5e7],
-  ['wizard-library', 'Wizard Library', 'library', 10540, 4.6e15, 74800, 2.1e7, 5.2e7],
-  ['titan-gym', 'Titan Gym', 'gym', 10910, 1.1e16, 112000, 3.1e7, 7.8e7],
-  ['mega-arcade', 'Mega Arcade', 'arcade', 11286, 2.5e16, 168000, 4.7e7, 1.2e8],
-  ['space-cinema', 'Space Cinema', 'cinema', 11668, 5.8e16, 253000, 7e7, 1.8e8],
-  ['lava-spa', 'Lava Spa', 'spa', 12056, 1.4e17, 382000, 1.1e8, 2.7e8],
-  ['galaxy-ballroom', 'Galaxy Ballroom', 'ballroom', 12450, 3.2e17, 576000, 1.6e8, 4e8],
-  ['control-room', 'Control Room', 'office', 12850, 7.6e17, 872000, 2.4e8, 6.1e8],
-  ['laser-studio', 'Laser Studio', 'music', 13256, 1.8e18, 1300000, 3.7e8, 9.2e8],
-  ['candy-playroom', 'Candy Playroom', 'kids', 13668, 4.3e18, 2000000, 5.6e8, 1.4e9],
-  ['mushroom-garden', 'Mushroom Garden', 'garden', 14086, 1e19, 3000000, 8.5e8, 2.1e9],
-  ['slime-laundry', 'Slime Laundry', 'laundry', 14510, 2.5e19, 4700000, 1.3e9, 3.2e9],
-  ['deep-sea-tank', 'Deep Sea Tank', 'aquarium', 14940, 6e19, 7100000, 2e9, 4.9e9],
-  ['treasure-gallery', 'Treasure Gallery', 'art', 15376, 1.5e20, 11000000, 3e9, 7.5e9],
-  ['core-vault', 'Core Vault', 'vault', 15818, 3.5e20, 17000000, 4.6e9, 1.2e10],
+  ['griddle-rooftop', 'Griddle Rooftop', 'forest', 0, 0, 0.006, 0, 0],
+  ['treetop-canopy', 'Treetop Canopy', 'forest', 100, 11, 0.0072, 2, 5],
+  ['owl-hollow', 'Owl Hollow', 'forest', 200, 21, 0.00984, 3, 7],
+  ['rope-bridge-village', 'Rope Bridge Village', 'forest', 306, 41, 0.0135, 4, 9],
+  ['leafy-crown', 'Leafy Crown', 'forest', 418, 79, 0.0185, 5, 13],
+  ['gumdrop-grove', 'Gumdrop Grove', 'candy', 536, 150, 0.0255, 7, 18],
+  ['lollipop-lane', 'Lollipop Lane', 'candy', 660, 300, 0.0351, 10, 24],
+  ['candy-cane-forest', 'Candy Cane Forest', 'candy', 790, 590, 0.0486, 13, 34],
+  ['cotton-candy-isles', 'Cotton Candy Isles', 'candy', 926, 1200, 0.0673, 19, 47],
+  ['marshmallow-peaks', 'Marshmallow Peaks', 'candy', 1068, 2300, 0.0934, 26, 65],
+  ['butter-cloud-bay', 'Butter Cloud Bay', 'clouds', 1216, 4600, 0.13, 36, 90],
+  ['rainbow-arch', 'Rainbow Arch', 'clouds', 1370, 9200, 0.181, 50, 130],
+  ['sky-castle', 'Sky Castle', 'clouds', 1530, 18000, 0.253, 70, 180],
+  ['balloon-bazaar', 'Balloon Bazaar', 'clouds', 1696, 37000, 0.355, 99, 250],
+  ['cloud-nine', 'Cloud Nine', 'clouds', 1868, 75000, 0.498, 140, 350],
+  ['crystal-caves', 'Crystal Caves', 'diamond', 2046, 150000, 0.7, 190, 490],
+  ['diamond-spires', 'Diamond Spires', 'diamond', 2230, 310000, 0.987, 270, 690],
+  ['sapphire-steps', 'Sapphire Steps', 'diamond', 2420, 640000, 1.39, 390, 970],
+  ['ruby-ridge', 'Ruby Ridge', 'diamond', 2616, 1.3e6, 1.97, 550, 1400],
+  ['emerald-arches', 'Emerald Arches', 'diamond', 2818, 2.7e6, 2.8, 780, 1900],
+  ['amethyst-halo', 'Amethyst Halo', 'diamond', 3026, 5.7e6, 3.98, 1100, 2800],
+  ['diamond-throne', 'Diamond Throne', 'diamond', 3240, 1.2e7, 5.66, 1600, 3900],
+  ['honeycomb-heights', 'Honeycomb Heights', 'honey', 3460, 2.5e7, 8.08, 2200, 5600],
+  ['syrup-falls', 'Syrup Falls', 'honey', 3686, 5.3e7, 11.6, 3200, 8000],
+  ['golden-hour', 'Golden Hour', 'honey', 3918, 1.1e8, 16.6, 4600, 12000],
+  ['maple-meadows', 'Maple Meadows', 'honey', 4156, 2.4e8, 23.8, 6600, 17000],
+  ['butter-bridges', 'Butter Bridges', 'honey', 4400, 5.1e8, 34.2, 9500, 24000],
+  ['caramel-canyon', 'Caramel Canyon', 'honey', 4650, 1.1e9, 49.3, 14000, 34000],
+  ['golden-griddle', 'Golden Griddle', 'honey', 4906, 2.3e9, 71.3, 20000, 50000],
+  ['frost-gate', 'Frost Gate', 'ice', 5168, 5e9, 103, 29000, 72000],
+  ['snowflake-drift', 'Snowflake Drift', 'ice', 5436, 1.1e10, 150, 42000, 100000],
+  ['ice-palace', 'Ice Palace', 'ice', 5710, 2.4e10, 218, 60000, 150000],
+  ['glacier-peaks', 'Glacier Peaks', 'ice', 5990, 5.2e10, 317, 88000, 220000],
+  ['frozen-waffles', 'Frozen Waffles', 'ice', 6276, 1.1e11, 462, 130000, 320000],
+  ['aurora-ribbons', 'Aurora Ribbons', 'ice', 6568, 2.5e11, 676, 190000, 470000],
+  ['polar-lights', 'Polar Lights', 'ice', 6866, 5.6e11, 990, 270000, 690000],
+  ['crystal-blizzard', 'Crystal Blizzard', 'ice', 7170, 1.2e12, 1450, 400000, 1e6],
+  ['satellite-belt', 'Satellite Belt', 'space', 7480, 2.8e12, 2140, 590000, 1.5e6],
+  ['moon-diner', 'Moon Diner', 'space', 7796, 6.2e12, 3150, 870000, 2.2e6],
+  ['crater-cafe', 'Crater Cafe', 'space', 8118, 1.4e13, 4650, 1.3e6, 3.2e6],
+  ['comet-trail', 'Comet Trail', 'space', 8446, 3.2e13, 6870, 1.9e6, 4.8e6],
+  ['asteroid-pantry', 'Asteroid Pantry', 'space', 8780, 7.2e13, 10200, 2.8e6, 7.1e6],
+  ['ring-planet', 'Ring Planet', 'space', 9120, 1.6e14, 15100, 4.2e6, 1e7],
+  ['space-station-snacks', 'Space Station Snacks', 'space', 9466, 3.7e14, 22500, 6.2e6, 1.6e7],
+  ['rocket-brunch', 'Rocket Brunch', 'space', 9818, 8.6e14, 33500, 9.3e6, 2.3e7],
+  ['meteor-muffins', 'Meteor Muffins', 'space', 10176, 2e15, 50000, 1.4e7, 3.5e7],
+  ['orbit-omelette', 'Orbit Omelette', 'space', 10540, 4.6e15, 74800, 2.1e7, 5.2e7],
+  ['solar-flare-skillet', 'Solar Flare Skillet', 'space', 10910, 1.1e16, 112000, 3.1e7, 7.8e7],
+  ['nebula-kitchen', 'Nebula Kitchen', 'galaxy', 11286, 2.5e16, 168000, 4.7e7, 1.2e8],
+  ['galaxy-griddle', 'Galaxy Griddle', 'galaxy', 11668, 5.8e16, 253000, 7e7, 1.8e8],
+  ['starlight-stack', 'Starlight Stack', 'galaxy', 12056, 1.4e17, 382000, 1.1e8, 2.7e8],
+  ['pulsar-pancakes', 'Pulsar Pancakes', 'galaxy', 12450, 3.2e17, 576000, 1.6e8, 4e8],
+  ['quasar-crepes', 'Quasar Crepes', 'galaxy', 12850, 7.6e17, 872000, 2.4e8, 6.1e8],
+  ['supernova-syrup', 'Supernova Syrup', 'galaxy', 13256, 1.8e18, 1300000, 3.7e8, 9.2e8],
+  ['wormhole-waffles', 'Wormhole Waffles', 'galaxy', 13668, 4.3e18, 2000000, 5.6e8, 1.4e9],
+  ['black-hole-bakery', 'Black Hole Bakery', 'galaxy', 14086, 1e19, 3000000, 8.5e8, 2.1e9],
+  ['event-horizon-eatery', 'Event Horizon Eatery', 'galaxy', 14510, 2.5e19, 4700000, 1.3e9, 3.2e9],
+  ['multiverse-maple', 'Multiverse Maple', 'galaxy', 14940, 6e19, 7100000, 2e9, 4.9e9],
+  ['cosmic-core', 'Cosmic Core', 'galaxy', 15376, 1.5e20, 11000000, 3e9, 7.5e9],
+  ['the-final-flapjack', 'The Final Flapjack', 'galaxy', 15818, 3.5e20, 17000000, 4.6e9, 1.2e10],
 ]
+
+/**
+ * Forty more layers above the Final Flapjack, in four more worlds of the sky: Rainbow
+ * World, Dreamland, Sun World and Infinity - for the long game. Their numbers carry on the
+ * table's pattern: each layer a little taller than the last (12 m more each time), its
+ * wall about 2.2 times the one below, every metre paying about 1.5 times as much.
+ */
+const MORE_LAYERS = [
+  ['rainbow', ['Rainbow Gate', 'Prism Falls', 'Spectrum Bridge', 'Color Cascade', 'Rainbow Ribbons', 'Glitter Garden', 'Sparkle Springs', 'Kaleidoscope Keep', 'Prism Palace', 'Rainbow Crown']],
+  ['dream', ['Dreamland Door', 'Pillow Peaks', 'Lullaby Lagoon', 'Sleepy Stars', 'Marshmallow Moon', 'Wishing Well', 'Fairy Floss Fields', 'Unicorn Meadow', 'Dream Castle', 'Sweet Dreams Summit']],
+  ['sun', ['Sunrise Steps', 'Golden Rays', 'Solar Gardens', 'Blazing Bridge', 'Phoenix Nest', 'Sunflower Sky', 'Radiant Ridge', 'Corona Cove', 'Sun Temple', 'Heart of the Sun']],
+  ['infinity', ['Infinity Gate', 'Starlight Throne', 'Celestial Halls', 'Eternity Express', 'Diamond Dimension', 'Cosmic Crown', 'Angel Clouds', 'Heavenly Griddle', 'Universe Edge', 'The Endless Stack']],
+]
+/** Two significant figures, so the numbers read cleanly. */
+const sig2 = (n) => {
+  if (n < 100) return Math.round(n * 10) / 10
+  const step = 10 ** (Math.floor(Math.log10(n)) - 1)
+  return Math.round(n / step) * step
+}
+for (const [theme, names] of MORE_LAYERS) {
+  for (const name of names) {
+    const last = FLOOR_TABLE[FLOOR_TABLE.length - 1]
+    const before = FLOOR_TABLE[FLOOR_TABLE.length - 2]
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    FLOOR_TABLE.push([id, name, theme, last[3] + (last[3] - before[3]) + 12, sig2(last[4] * 2.2), sig2(last[5] * 1.5), sig2(last[6] * 1.45), sig2(last[7] * 1.5)])
+  }
+}
 
 export const ZONES = FLOOR_TABLE.map(([id, name, theme, start, wall, winsPerMeter, smash, discover]) => ({
   id,
@@ -285,11 +315,11 @@ export const TROPHY_METERS = 80
  * swing. (The charge before it is yours: you hold for as long as you like, and the server
  * only hears about the release.)
  */
-export const ROLL_LAUNCH = 0.55
+export const ROLL_LAUNCH = 0.28
 /** Seconds the phone falls through the sky, from your hand to the hotel's glass roof. */
 export const DROP_AIR = 2.4
 /** Seconds the phone takes to bounce and settle once it stops on a floor. */
-export const DROP_SETTLE = 0.6
+export const DROP_SETTLE = 0.9
 /** Seconds smashing down through the hotel for a drop `below` metres under the roof. */
 export const towerDuration = (below) => 0.8 + 1.7 * Math.log(1 + Math.max(0, below) / 60)
 /**
@@ -332,10 +362,10 @@ export const twangAt = (seconds) => 1 - TWANG_DEPTH * Math.abs(Math.sin((Math.PI
  * the top within a grade, and a big step up to the next.
  */
 export const HIT_GRADES = [
-  { id: 'perfect', min: 0.88, reach: [1.4, 1.5], bonus: 1.6, label: 'PERFECT THROW!' },
-  { id: 'great', min: 0.7, reach: [1.1, 1.2], bonus: 1.25, label: 'GREAT THROW!' },
-  { id: 'good', min: 0.4, reach: [0.8, 0.9], bonus: 1, label: 'GOOD THROW' },
-  { id: 'weak', min: 0, reach: [0.5, 0.6], bonus: 0.75, label: 'WEAK THROW...' },
+  { id: 'perfect', min: 0.88, reach: [1.4, 1.5], bonus: 1.6, label: 'PERFECT LAUNCH!' },
+  { id: 'great', min: 0.7, reach: [1.1, 1.2], bonus: 1.25, label: 'GREAT LAUNCH!' },
+  { id: 'good', min: 0.4, reach: [0.8, 0.9], bonus: 1, label: 'GOOD LAUNCH' },
+  { id: 'weak', min: 0, reach: [0.5, 0.6], bonus: 0.75, label: 'WEAK LAUNCH...' },
 ]
 const clampAccuracy = (accuracy) => Math.min(1, Math.max(0, accuracy))
 /** The grade for a meter `accuracy` (0-1), or null for a drop without the meter. */
@@ -353,6 +383,27 @@ export function hitReach(accuracy) {
   const t = Math.min(1, (clampAccuracy(accuracy) - grade.min) / (top - grade.min))
   return grade.reach[0] + (grade.reach[1] - grade.reach[0]) * t
 }
+
+// --- Sky bubbles & grumpy clouds (the flight mini-game) ----------------------------
+
+/**
+ * While your pancake climbs you steer it left and right (A/D, arrows, or touch): strength
+ * bubbles float down the sky towards it and grumpy clouds drift across. A bubble caught
+ * is BUBBLE_FLIPS flips' worth of Strength (your pan's own gain, multiplied as usual);
+ * a cloud hit knocks the pancake spinning for a moment so you miss what's next.
+ * Bubbles come one every BUBBLE_EVERY seconds of the climb, from BUBBLE_FROM seconds
+ * after it leaves the pan to BUBBLE_TAIL seconds before the top. The authority accepts
+ * at most bubbleCount(duration) per launch, each bubble index once.
+ */
+export const BUBBLE_EVERY = 0.5
+export const BUBBLE_FROM = 0.9
+export const BUBBLE_TAIL = 0.5
+export const BUBBLE_FLIPS = 2
+/** Bubbles in a launch lasting `duration` seconds (rollDuration). */
+export const bubbleCount = (duration) =>
+  Math.max(3, Math.floor((duration - ROLL_LAUNCH - DROP_SETTLE - BUBBLE_FROM - BUBBLE_TAIL) / BUBBLE_EVERY) + 1)
+/** Seconds into a launch that bubble `index` reaches the pancake's height. */
+export const bubbleTime = (index) => ROLL_LAUNCH + BUBBLE_FROM + index * BUBBLE_EVERY
 
 // --- Pets & eggs ------------------------------------------------------------------
 
@@ -396,6 +447,15 @@ export const PETS = {
   dolphin: { name: 'Dolphin', rarity: 'epic', mult: 22 },
   shark: { name: 'Shark', rarity: 'legendary', mult: 32 },
   kraken: { name: 'Kraken', rarity: 'mythic', mult: 55 },
+  // Frosty Peaks' Frost Egg, and Lava Kitchen's Magma Egg: each world's best pets.
+  penguin: { name: 'Penguin', rarity: 'rare', mult: 40 },
+  snowfox: { name: 'Snow Fox', rarity: 'epic', mult: 58 },
+  polarbear: { name: 'Polar Bear', rarity: 'legendary', mult: 82 },
+  yeti: { name: 'Yeti', rarity: 'mythic', mult: 125 },
+  emberpup: { name: 'Ember Pup', rarity: 'rare', mult: 95 },
+  lavaturtle: { name: 'Lava Turtle', rarity: 'epic', mult: 135 },
+  magmadrake: { name: 'Magma Drake', rarity: 'legendary', mult: 190 },
+  magmaking: { name: 'Magma King', rarity: 'mythic', mult: 280 },
 }
 
 /**
@@ -406,11 +466,13 @@ export const PETS = {
  */
 export const EGGS = {
   basic: { name: 'Basic', cost: { wins: 15 }, pets: [['cat', 45], ['dog', 30], ['bunny', 20], ['bear', 5]] },
-  meadow: { name: 'Grass', cost: { wins: 120 }, pets: [['cow', 45], ['parrot', 30], ['fox', 20], ['tiger', 5]] },
-  sunset: { name: 'Sunset', cost: { wins: 750 }, pets: [['flamingo', 45], ['turtle', 30], ['owl', 20], ['phoenix', 5]] },
-  unicorn: { name: 'Unicorn', cost: { wins: 6000 }, pets: [['pony', 50], ['unicorn', 35], ['pegasus', 15]] },
-  volcano: { name: 'Volcano', cost: { wins: 35000 }, pets: [['salamander', 50], ['firebird', 30], ['golem', 15], ['inferno', 5]] },
-  beach: { name: 'Beach', cost: { wins: 2000000 }, world: 1, pets: [['seagull', 45], ['dolphin', 30], ['shark', 20], ['kraken', 5]] },
+  meadow: { name: 'Berry', cost: { wins: 120 }, pets: [['cow', 45], ['parrot', 30], ['fox', 20], ['tiger', 5]] },
+  sunset: { name: 'Syrup', cost: { wins: 750 }, pets: [['flamingo', 45], ['turtle', 30], ['owl', 20], ['phoenix', 5]] },
+  unicorn: { name: 'Sprinkle', cost: { wins: 6000 }, pets: [['pony', 50], ['unicorn', 35], ['pegasus', 15]] },
+  volcano: { name: 'Toaster', cost: { wins: 35000 }, pets: [['salamander', 50], ['firebird', 30], ['golem', 15], ['inferno', 5]] },
+  beach: { name: 'Coconut', cost: { wins: 2000000 }, world: 1, pets: [['seagull', 45], ['dolphin', 30], ['shark', 20], ['kraken', 5]] },
+  frost: { name: 'Frost', cost: { wins: 500000000 }, world: 2, pets: [['penguin', 45], ['snowfox', 30], ['polarbear', 20], ['yeti', 5]] },
+  magma: { name: 'Magma', cost: { wins: 100000000000 }, world: 3, pets: [['emberpup', 45], ['lavaturtle', 30], ['magmadrake', 20], ['magmaking', 5]] },
 }
 
 export const MAX_EQUIPPED_PETS = 3
@@ -423,24 +485,24 @@ export const MULTI_HATCH = 3
 export const POTION_DURATION_MS = 5 * 60 * 1000
 
 export const ITEMS = {
-  potionHealth: { name: 'x2 Skill Potion', kind: 'potion', boost: 'health', durationMs: POTION_DURATION_MS },
-  potionWins: { name: 'x2 Wins Potion', kind: 'potion', boost: 'wins', durationMs: POTION_DURATION_MS },
-  eggMeadow: { name: 'Grass Egg', kind: 'egg', egg: 'meadow' },
-  eggSunset: { name: 'Sunset Egg', kind: 'egg', egg: 'sunset' },
-  eggUnicorn: { name: 'Unicorn Egg', kind: 'egg', egg: 'unicorn' },
-  eggVolcano: { name: 'Volcano Egg', kind: 'egg', egg: 'volcano' },
+  potionHealth: { name: 'x2 Strength Potion', kind: 'potion', boost: 'health', durationMs: POTION_DURATION_MS },
+  potionWins: { name: 'x2 Trophies Potion', kind: 'potion', boost: 'wins', durationMs: POTION_DURATION_MS },
+  eggMeadow: { name: 'Berry Egg', kind: 'egg', egg: 'meadow' },
+  eggSunset: { name: 'Syrup Egg', kind: 'egg', egg: 'sunset' },
+  eggUnicorn: { name: 'Sprinkle Egg', kind: 'egg', egg: 'unicorn' },
+  eggVolcano: { name: 'Toaster Egg', kind: 'egg', egg: 'volcano' },
 }
 
 /** 7-day cycle; day N unlocks N x 24h after the cycle started. */
 export const DAILY_INTERVAL_MS = 24 * 60 * 60 * 1000
 export const DAILY_REWARDS = [
-  { label: 'x2 Wins', icon: 'potionWins', sub: '5m', grant: { item: 'potionWins' } },
+  { label: 'x2 Trophies', icon: 'potionWins', sub: '5m', grant: { item: 'potionWins' } },
   { label: 'Dragon', icon: 'pet:dragon', sub: 'x1', grant: { pet: 'dragon' } },
-  { label: 'x2 Skill', icon: 'potionHealth', sub: '5m', grant: { item: 'potionHealth' } },
-  { label: 'Unicorn Egg', icon: 'egg:unicorn', sub: 'x1', grant: { item: 'eggUnicorn' } },
-  { label: 'x2 Skill', icon: 'potionHealth', sub: '5m', grant: { item: 'potionHealth' } },
-  { label: 'x2 Wins', icon: 'potionWins', sub: '5m', grant: { item: 'potionWins' } },
-  { label: 'Volcano Egg', icon: 'egg:volcano', sub: 'x1', grant: { item: 'eggVolcano' } },
+  { label: 'x2 Strength', icon: 'potionHealth', sub: '5m', grant: { item: 'potionHealth' } },
+  { label: 'Sprinkle Egg', icon: 'egg:unicorn', sub: 'x1', grant: { item: 'eggUnicorn' } },
+  { label: 'x2 Strength', icon: 'potionHealth', sub: '5m', grant: { item: 'potionHealth' } },
+  { label: 'x2 Trophies', icon: 'potionWins', sub: '5m', grant: { item: 'potionWins' } },
+  { label: 'Toaster Egg', icon: 'egg:volcano', sub: 'x1', grant: { item: 'eggVolcano' } },
 ]
 
 /**
@@ -448,14 +510,14 @@ export const DAILY_REWARDS = [
  * forward to every few minutes for the first hour.
  */
 export const PLAYTIME_REWARDS = [
-  { minutes: 3, label: '+10 Wins', icon: 'trophy', grant: { wins: 10 } },
-  { minutes: 8, label: 'x2 Skill', icon: 'potionHealth', grant: { item: 'potionHealth' } },
-  { minutes: 15, label: 'Grass Egg', icon: 'egg:meadow', grant: { item: 'eggMeadow' } },
-  { minutes: 25, label: 'x2 Wins', icon: 'potionWins', grant: { item: 'potionWins' } },
-  { minutes: 35, label: '+250 Wins', icon: 'trophy', grant: { wins: 250 } },
-  { minutes: 45, label: 'Sunset Egg', icon: 'egg:sunset', grant: { item: 'eggSunset' } },
-  { minutes: 60, label: 'x2 Skill', icon: 'potionHealth', grant: { item: 'potionHealth' } },
-  { minutes: 90, label: 'Unicorn Egg', icon: 'egg:unicorn', grant: { item: 'eggUnicorn' } },
+  { minutes: 3, label: '+10 Trophies', icon: 'trophy', grant: { wins: 10 } },
+  { minutes: 8, label: 'x2 Strength', icon: 'potionHealth', grant: { item: 'potionHealth' } },
+  { minutes: 15, label: 'Berry Egg', icon: 'egg:meadow', grant: { item: 'eggMeadow' } },
+  { minutes: 25, label: 'x2 Trophies', icon: 'potionWins', grant: { item: 'potionWins' } },
+  { minutes: 35, label: '+250 Trophies', icon: 'trophy', grant: { wins: 250 } },
+  { minutes: 45, label: 'Syrup Egg', icon: 'egg:sunset', grant: { item: 'eggSunset' } },
+  { minutes: 60, label: 'x2 Strength', icon: 'potionHealth', grant: { item: 'potionHealth' } },
+  { minutes: 90, label: 'Sprinkle Egg', icon: 'egg:unicorn', grant: { item: 'eggUnicorn' } },
 ]
 
 /** The stand by spawn: a pet the first time, a potion on later sessions. */
@@ -472,7 +534,9 @@ export const OFFLINE_MIN_MS = 60 * 1000
  * open for good, both ways. Stepping through earns the badge of the same id.
  */
 export const WORLD_PORTALS = {
-  world2: { name: 'Palm Beach', wins: 1000000, rebirths: 8 },
+  world2: { name: 'Tropic Skies', wins: 1000000, rebirths: 8 },
+  world3: { name: 'Frosty Peaks', wins: 250000000, rebirths: 18 },
+  world4: { name: 'Lava Kitchen', wins: 40000000000, rebirths: 30 },
 }
 
 /**
@@ -493,78 +557,97 @@ export const SECRET_STAR = { world: 1, power: 2 }
  * (the same portal) costs nothing.
  */
 export const WORLDS = [
-  { id: 'world1', name: 'Sky City', wins: 1 },
-  { id: 'world2', name: 'Palm Beach', wins: 3 },
+  { id: 'world1', name: 'Candy Palace', wins: 1 },
+  { id: 'world2', name: 'Tropic Skies', wins: 3 },
+  { id: 'world3', name: 'Frosty Peaks', wins: 9 },
+  { id: 'world4', name: 'Lava Kitchen', wins: 27 },
 ]
 
-/** The Beach Resort's floors in Palm Beach: [id, name, room theme], one for each of World 1's. */
+/** The Beach Resort's floors in Tropic Skies: [id, name, room theme], one for each of World 1's. */
 const WORLD2_STAGES = [
-  ['w2-infinity-pool', 'Infinity Pool', 'pool'],
-  ['w2-tiki-lounge', 'Tiki Lounge', 'lounge'],
-  ['w2-seashell-suite', 'Seashell Suite', 'bedroom'],
-  ['w2-coral-bathroom', 'Coral Bathroom', 'bathroom'],
-  ['w2-coconut-kitchen', 'Coconut Kitchen', 'kitchen'],
-  ['w2-seafood-diner', 'Seafood Diner', 'dining'],
-  ['w2-driftwood-library', 'Driftwood Library', 'library'],
-  ['w2-beach-gym', 'Beach Gym', 'gym'],
-  ['w2-boardwalk-arcade', 'Boardwalk Arcade', 'arcade'],
-  ['w2-sunset-cinema', 'Sunset Cinema', 'cinema'],
-  ['w2-seaweed-spa', 'Seaweed Spa', 'spa'],
-  ['w2-luau-ballroom', 'Luau Ballroom', 'ballroom'],
-  ['w2-lifeguard-office', 'Lifeguard Office', 'office'],
-  ['w2-steel-drum-studio', 'Steel Drum Studio', 'music'],
-  ['w2-sandcastle-club', 'Sandcastle Club', 'kids'],
-  ['w2-palm-atrium', 'Palm Atrium', 'garden'],
-  ['w2-towel-laundry', 'Towel Laundry', 'laundry'],
-  ['w2-reef-aquarium', 'Reef Aquarium', 'aquarium'],
-  ['w2-shell-gallery', 'Shell Gallery', 'art'],
-  ['w2-pirate-vault', 'Pirate Vault', 'vault'],
-  ['w2-wave-pool', 'Wave Pool', 'pool'],
-  ['w2-hammock-lounge', 'Hammock Lounge', 'lounge'],
-  ['w2-pelican-suite', 'Pelican Suite', 'bedroom'],
-  ['w2-pearl-bathroom', 'Pearl Bathroom', 'bathroom'],
-  ['w2-mango-kitchen', 'Mango Kitchen', 'kitchen'],
-  ['w2-clam-bake-hall', 'Clam Bake Hall', 'dining'],
-  ['w2-captain-library', 'Captain Library', 'library'],
-  ['w2-surf-gym', 'Surf Gym', 'gym'],
-  ['w2-pier-arcade', 'Pier Arcade', 'arcade'],
-  ['w2-dive-in-cinema', 'Dive-In Cinema', 'cinema'],
-  ['w2-hot-sand-spa', 'Hot Sand Spa', 'spa'],
-  ['w2-hula-ballroom', 'Hula Ballroom', 'ballroom'],
-  ['w2-harbor-office', 'Harbor Office', 'office'],
-  ['w2-ukulele-studio', 'Ukulele Studio', 'music'],
-  ['w2-crab-playroom', 'Crab Playroom', 'kids'],
-  ['w2-banana-garden', 'Banana Garden', 'garden'],
-  ['w2-sail-laundry', 'Sail Laundry', 'laundry'],
-  ['w2-turtle-tank', 'Turtle Tank', 'aquarium'],
-  ['w2-coral-gallery', 'Coral Gallery', 'art'],
-  ['w2-treasure-vault', 'Treasure Vault', 'vault'],
-  ['w2-moonlit-pool', 'Moonlit Pool', 'pool'],
-  ['w2-starfish-lounge', 'Starfish Lounge', 'lounge'],
-  ['w2-mermaid-suite', 'Mermaid Suite', 'bedroom'],
-  ['w2-lagoon-bathroom', 'Lagoon Bathroom', 'bathroom'],
-  ['w2-shipwreck-galley', 'Shipwreck Galley', 'kitchen'],
-  ['w2-kraken-hall', 'Kraken Hall', 'dining'],
-  ['w2-lighthouse-library', 'Lighthouse Library', 'library'],
-  ['w2-shark-gym', 'Shark Gym', 'gym'],
-  ['w2-neon-arcade', 'Neon Arcade', 'arcade'],
-  ['w2-deep-sea-cinema', 'Deep Sea Cinema', 'cinema'],
-  ['w2-volcano-spa', 'Volcano Spa', 'spa'],
-  ['w2-atlantis-ballroom', 'Atlantis Ballroom', 'ballroom'],
-  ['w2-sub-control-room', 'Sub Control Room', 'office'],
-  ['w2-siren-studio', 'Siren Studio', 'music'],
-  ['w2-bubble-playroom', 'Bubble Playroom', 'kids'],
-  ['w2-kelp-garden', 'Kelp Garden', 'garden'],
-  ['w2-tidal-laundry', 'Tidal Laundry', 'laundry'],
-  ['w2-abyss-aquarium', 'Abyss Aquarium', 'aquarium'],
-  ['w2-pearl-gallery', 'Pearl Gallery', 'art'],
-  ['w2-golden-vault', 'Golden Vault', 'vault'],
+  ['w2-palm-canopy', 'Palm Canopy', 'forest'],
+  ['w2-coconut-grove', 'Coconut Grove', 'forest'],
+  ['w2-parrot-perch', 'Parrot Perch', 'forest'],
+  ['w2-tiki-rope-bridge', 'Tiki Rope Bridge', 'forest'],
+  ['w2-banana-leaf-crown', 'Banana Leaf Crown', 'forest'],
+  ['w2-mango-gumdrops', 'Mango Gumdrops', 'candy'],
+  ['w2-pineapple-lollipops', 'Pineapple Lollipops', 'candy'],
+  ['w2-papaya-candy-canes', 'Papaya Candy Canes', 'candy'],
+  ['w2-shaved-ice-isles', 'Shaved Ice Isles', 'candy'],
+  ['w2-coconut-marshmallows', 'Coconut Marshmallows', 'candy'],
+  ['w2-pina-colada-clouds', 'Pina Colada Clouds', 'clouds'],
+  ['w2-tropic-rainbow', 'Tropic Rainbow', 'clouds'],
+  ['w2-seashell-castle', 'Seashell Castle', 'clouds'],
+  ['w2-beach-ball-bazaar', 'Beach Ball Bazaar', 'clouds'],
+  ['w2-lagoon-cloud-nine', 'Lagoon Cloud Nine', 'clouds'],
+  ['w2-coral-caves', 'Coral Caves', 'diamond'],
+  ['w2-pearl-spires', 'Pearl Spires', 'diamond'],
+  ['w2-lagoon-sapphires', 'Lagoon Sapphires', 'diamond'],
+  ['w2-sunset-rubies', 'Sunset Rubies', 'diamond'],
+  ['w2-jungle-emeralds', 'Jungle Emeralds', 'diamond'],
+  ['w2-starfish-amethyst', 'Starfish Amethyst', 'diamond'],
+  ['w2-treasure-throne', 'Treasure Throne', 'diamond'],
+  ['w2-golden-lagoon', 'Golden Lagoon', 'honey'],
+  ['w2-mango-syrup-falls', 'Mango Syrup Falls', 'honey'],
+  ['w2-golden-sunset', 'Golden Sunset', 'honey'],
+  ['w2-papaya-meadows', 'Papaya Meadows', 'honey'],
+  ['w2-coconut-butter-bridges', 'Coconut Butter Bridges', 'honey'],
+  ['w2-caramel-cove', 'Caramel Cove', 'honey'],
+  ['w2-golden-grill', 'Golden Grill', 'honey'],
+  ['w2-frosty-lagoon', 'Frosty Lagoon', 'ice'],
+  ['w2-snowy-sandbar', 'Snowy Sandbar', 'ice'],
+  ['w2-ice-tiki-palace', 'Ice Tiki Palace', 'ice'],
+  ['w2-glacier-reef', 'Glacier Reef', 'ice'],
+  ['w2-frozen-smoothies', 'Frozen Smoothies', 'ice'],
+  ['w2-coral-aurora', 'Coral Aurora', 'ice'],
+  ['w2-polar-palms', 'Polar Palms', 'ice'],
+  ['w2-blizzard-bay', 'Blizzard Bay', 'ice'],
+  ['w2-lighthouse-belt', 'Lighthouse Belt', 'space'],
+  ['w2-coconut-moon', 'Coconut Moon', 'space'],
+  ['w2-sand-crater-cafe', 'Sand Crater Cafe', 'space'],
+  ['w2-flamingo-comet', 'Flamingo Comet', 'space'],
+  ['w2-treasure-asteroids', 'Treasure Asteroids', 'space'],
+  ['w2-pearl-ring-planet', 'Pearl Ring Planet', 'space'],
+  ['w2-space-shack-snacks', 'Space Shack Snacks', 'space'],
+  ['w2-rocket-regatta', 'Rocket Regatta', 'space'],
+  ['w2-meteor-mango', 'Meteor Mango', 'space'],
+  ['w2-orbit-oasis', 'Orbit Oasis', 'space'],
+  ['w2-solar-surf', 'Solar Surf', 'space'],
+  ['w2-lagoon-nebula', 'Lagoon Nebula', 'galaxy'],
+  ['w2-galaxy-grill', 'Galaxy Grill', 'galaxy'],
+  ['w2-starlight-sandbar', 'Starlight Sandbar', 'galaxy'],
+  ['w2-pulsar-papaya', 'Pulsar Papaya', 'galaxy'],
+  ['w2-seashell-quasar', 'Seashell Quasar', 'galaxy'],
+  ['w2-supernova-smoothie', 'Supernova Smoothie', 'galaxy'],
+  ['w2-wormhole-wave', 'Wormhole Wave', 'galaxy'],
+  ['w2-whirlpool-bakery', 'Whirlpool Bakery', 'galaxy'],
+  ['w2-event-horizon-inn', 'Event Horizon Inn', 'galaxy'],
+  ['w2-multiverse-mango', 'Multiverse Mango', 'galaxy'],
+  ['w2-cosmic-coral', 'Cosmic Coral', 'galaxy'],
+  ['w2-the-final-wave', 'The Final Wave', 'galaxy'],
 ]
+
+/**
+ * Frosty Peaks' and Lava Kitchen's layers: World 1's, renamed in each world's own words -
+ * "Treetop Canopy" becomes "Snowy Canopy" and "Molten Canopy".
+ */
+const WORLD_WORDS = { 2: ['Frosty', 'Snowy', 'Icy', 'Polar', 'Glacier'], 3: ['Lava', 'Magma', 'Molten', 'Ember', 'Blazing'] }
+const renamedStages = (world, ownWords = null) =>
+  ZONES.map((zone, i) => {
+    const words = ownWords ?? WORLD_WORDS[world]
+    const adj = words[i % words.length]
+    const parts = zone.name.split(' ')
+    const name = parts[0] === 'The' ? `The ${adj} ${parts[parts.length - 1]}` : parts.length > 1 ? `${adj} ${parts.slice(1).join(' ')}` : `${adj} ${zone.name}`
+    return [`w${world + 1}-${zone.id}`, name, zone.theme]
+  })
+/** Tropic Skies' layers past its own sixty: World 1's new ones, in island words. */
+const tropicMore = () => renamedStages(1, ['Tropic', 'Coral', 'Lagoon', 'Palm', 'Sunny']).slice(WORLD2_STAGES.length)
+const STAGES = [null, [...WORLD2_STAGES, ...tropicMore()], renamedStages(2), renamedStages(3)]
 
 const worldZones = (world) =>
   ZONES.map((zone, i) => {
     const mult = WORLDS[world].wins
-    const [id, name, theme] = world === 1 ? WORLD2_STAGES[i] : [zone.id, zone.name, zone.theme]
+    const [id, name, theme] = world > 0 ? STAGES[world][i] : [zone.id, zone.name, zone.theme]
     return {
       ...zone,
       id,
@@ -577,7 +660,7 @@ const worldZones = (world) =>
   })
 
 /** Each world's floors, as ZONES: `WORLD_ZONES[profile.world]`. */
-export const WORLD_ZONES = [ZONES, worldZones(1)]
+export const WORLD_ZONES = WORLDS.map((_, world) => (world ? worldZones(world) : ZONES))
 export const zonesOf = (world) => WORLD_ZONES[world] ?? ZONES
 
 // --- Shop -------------------------------------------------------------------------
@@ -587,11 +670,11 @@ export const zonesOf = (world) => WORLD_ZONES[world] ?? ZONES
  * is bought with them. `pass` = permanent unlock; `consumable` = grants every time.
  */
 export const SHOP = {
-  healthX2: { name: 'x2 Skill', price: 400, kind: 'pass' },
-  winsX2: { name: 'x2 Wins', price: 2500, kind: 'pass' },
-  autoRoll: { name: 'Auto Drop', price: 150, kind: 'pass' },
-  padVeryOp: { name: 'VERY OP! Throw Pad', price: 150000, kind: 'pass' },
-  padBest: { name: 'BEST OVERALL! Throw Pad', price: 2500000, kind: 'pass' },
+  healthX2: { name: 'x2 Strength', price: 400, kind: 'pass' },
+  winsX2: { name: 'x2 Trophies', price: 2500, kind: 'pass' },
+  autoRoll: { name: 'Auto Launch', price: 150, kind: 'pass' },
+  padVeryOp: { name: 'VERY OP! Flip Mat', price: 150000, kind: 'pass' },
+  padBest: { name: 'BEST OVERALL! Flip Mat', price: 2500000, kind: 'pass' },
   sphinx: { name: 'Sphinx', price: 2500000, kind: 'consumable', grant: { pet: 'sphinx' }, stock: 1000 },
 }
 
@@ -601,14 +684,14 @@ export const SHOP = {
  * packs grow with you: `winsRolls` max-level drops' worth of Wins.
  */
 export const GEM_PRODUCTS = {
-  wins_small: { name: 'Pile of Wins', blurb: '10 max-level drops of Wins', icon: 'trophy', grant: { winsRolls: 10 } },
-  wins_big: { name: 'Mountain of Wins', blurb: '60 max-level drops of Wins', icon: 'trophy', grant: { winsRolls: 60 } },
-  potion_bundle: { name: 'Potion Bundle', blurb: '3 x2 Skill + 3 x2 Wins potions', icon: 'potionHealth', grant: { items: { potionHealth: 3, potionWins: 3 } } },
-  volcano_eggs: { name: '3 Volcano Eggs', blurb: 'The best pets in the game', icon: 'egg:volcano', grant: { items: { eggVolcano: 3 } } },
-  auto_roll: { name: 'Auto Drop', blurb: 'Throws your phone for you from the Drop Zone', icon: 'tire', grant: { pass: 'autoRoll' } },
-  health_x2: { name: 'x2 Skill', blurb: 'Double every Skill gain, forever', icon: 'heart', grant: { pass: 'healthX2' } },
-  wins_x2: { name: 'x2 Wins', blurb: 'Double every drop’s Wins, forever', icon: 'trophy', grant: { pass: 'winsX2' } },
-  pad_best: { name: 'Galaxy Throw Pad', blurb: 'Unlocks the x100 Galaxy throw pad', icon: 'portal', grant: { pass: 'padBest' } },
+  wins_small: { name: 'Pile of Trophies', blurb: '10 max-level launches of Trophies', icon: 'trophy', grant: { winsRolls: 10 } },
+  wins_big: { name: 'Mountain of Trophies', blurb: '60 max-level launches of Trophies', icon: 'trophy', grant: { winsRolls: 60 } },
+  potion_bundle: { name: 'Potion Bundle', blurb: '3 x2 Strength + 3 x2 Trophies potions', icon: 'potionHealth', grant: { items: { potionHealth: 3, potionWins: 3 } } },
+  volcano_eggs: { name: '3 Toaster Eggs', blurb: 'The best pets in the game', icon: 'egg:volcano', grant: { items: { eggVolcano: 3 } } },
+  auto_roll: { name: 'Auto Launch', blurb: 'Launches your pancake for you from the Launch Pad', icon: 'tire', grant: { pass: 'autoRoll' } },
+  health_x2: { name: 'x2 Strength', blurb: 'Double every Strength gain, forever', icon: 'heart', grant: { pass: 'healthX2' } },
+  wins_x2: { name: 'x2 Trophies', blurb: 'Double every launch’s Trophies, forever', icon: 'trophy', grant: { pass: 'winsX2' } },
+  pad_best: { name: '100 KG Galaxy Mat', blurb: 'Unlocks the x100 Galaxy flip mat', icon: 'portal', grant: { pass: 'padBest' } },
 }
 
 /**
@@ -616,8 +699,8 @@ export const GEM_PRODUCTS = {
  * and hyphens. `cooldownMs` keeps a player from chaining them.
  */
 export const AD_REWARDS = {
-  'health-potion': { label: 'x2 Skill Potion', icon: 'potionHealth', grant: { item: 'potionHealth' }, cooldownMs: 3 * 60 * 1000 },
-  'wins-potion': { label: 'x2 Wins Potion', icon: 'potionWins', grant: { item: 'potionWins' }, cooldownMs: 3 * 60 * 1000 },
+  'health-potion': { label: 'x2 Strength Potion', icon: 'potionHealth', grant: { item: 'potionHealth' }, cooldownMs: 3 * 60 * 1000 },
+  'wins-potion': { label: 'x2 Trophies Potion', icon: 'potionWins', grant: { item: 'potionWins' }, cooldownMs: 3 * 60 * 1000 },
 }
 
 /** Sphinx stock shown before the server reports the live count. */
@@ -676,9 +759,9 @@ export const crowdBonus = (others) => 1 + Math.min(CROWD_MAX, CROWD_STEP * Math.
  */
 export const LUCKY_CHANCE = 0.08
 export const LUCKY_GIFTS = [
-  { weight: 45, label: 'Bag of Wins', icon: 'trophy', grant: { winsRolls: 4 } },
-  { weight: 20, label: 'x2 Wins Potion', icon: 'potionWins', grant: { item: 'potionWins' } },
-  { weight: 20, label: 'x2 Skill Potion', icon: 'potionHealth', grant: { item: 'potionHealth' } },
+  { weight: 45, label: 'Bag of Trophies', icon: 'trophy', grant: { winsRolls: 4 } },
+  { weight: 20, label: 'x2 Trophies Potion', icon: 'potionWins', grant: { item: 'potionWins' } },
+  { weight: 20, label: 'x2 Strength Potion', icon: 'potionHealth', grant: { item: 'potionHealth' } },
   { weight: 15, label: 'Mystery Egg', icon: 'egg', grant: { egg: true } },
 ]
 
@@ -701,13 +784,13 @@ export const QUEST_TIERS = [
 ]
 export const QUEST_BONUS = { winsRolls: 15 }
 export const QUEST_TYPES = {
-  launch: { counter: 'launch', text: 'Drop your phone {n} times', targets: [5, 12, 25] },
-  great: { counter: 'great', text: 'Get {n} GREAT or PERFECT throws', targets: [2, 5, 10] },
-  perfect: { counter: 'perfect', text: 'Get {n} PERFECT throws', targets: [1, 3, 6] },
-  combo: { counter: 'combo', mode: 'best', text: 'Hit a PERFECT throw combo of {n}', targets: [2, 3, 4] },
-  reps: { counter: 'rep', text: 'Make {n} practice throws', targets: [40, 120, 300] },
-  meters: { counter: 'meters', text: 'Smash {n} m deep in total', scale: 'total', targets: [4, 10, 25] },
-  far: { counter: 'far', mode: 'best', text: 'Smash {n} m deep in one drop', scale: 'best', targets: [0.6, 0.8, 0.95] },
+  launch: { counter: 'launch', text: 'Launch your pancake {n} times', targets: [5, 12, 25] },
+  great: { counter: 'great', text: 'Get {n} GREAT or PERFECT launches', targets: [2, 5, 10] },
+  perfect: { counter: 'perfect', text: 'Get {n} PERFECT launches', targets: [1, 3, 6] },
+  combo: { counter: 'combo', mode: 'best', text: 'Hit a PERFECT launch combo of {n}', targets: [2, 3, 4] },
+  reps: { counter: 'rep', text: 'Flip {n} pancakes', targets: [40, 120, 300] },
+  meters: { counter: 'meters', text: 'Fly {n} m high in total', scale: 'total', targets: [4, 10, 25] },
+  far: { counter: 'far', mode: 'best', text: 'Fly {n} m high in one launch', scale: 'best', targets: [0.6, 0.8, 0.95] },
   hatch: { counter: 'hatch', text: 'Hatch {n} pets', targets: [1, 3, 6] },
   minutes: { counter: 'minute', text: 'Play for {n} minutes', targets: [5, 15, 30] },
 }
@@ -720,19 +803,21 @@ export const QUEST_TYPES = {
  * that much); after the last the guide is done.
  */
 export const TUTORIAL = [
-  { text: 'Stand on a throw pad or tap to throw your phone for Skill', event: 'train', target: 'pad0', health: 30 },
-  { text: 'Go to the DROP ZONE, hold DROP and let go at the top!', event: 'roll', target: 'roll' },
-  { text: 'Buy the Flip Phone with your Wins!', event: 'buyTire', target: 'tires' },
+  { text: 'Stand on a flip mat or tap to flip your pancake for Strength', event: 'train', target: 'pad0', health: 30 },
+  { text: 'Go to the LAUNCH PAD, hold LAUNCH and let go at the top!', event: 'roll', target: 'roll' },
+  { text: 'Buy the Copper Pan with your Trophies!', event: 'buyTire', target: 'tires' },
 ]
 
 export const BADGES = {
-  firstRoll: { name: 'First Drop' },
+  firstRoll: { name: 'First Launch' },
   firstRebirth: { name: 'First Rebirth' },
   firstPet: { name: 'Pet Owner' },
-  firstWall: { name: 'Floor Smasher' },
-  kilometer: { name: '1 Kilometre Drop' },
-  space: { name: 'Deluxe Smasher' },
-  cosmic: { name: 'Core Crusher' },
-  world2: { name: 'Beach Bum' },
+  firstWall: { name: 'Layer Breaker' },
+  kilometer: { name: '1 Kilometre High' },
+  space: { name: 'Space Cadet' },
+  cosmic: { name: 'Final Flapjack' },
+  world2: { name: 'Island Flyer' },
+  world3: { name: 'Snow Explorer' },
+  world4: { name: 'Lava Legend' },
   secretStar: { name: 'Star Finder' },
 }

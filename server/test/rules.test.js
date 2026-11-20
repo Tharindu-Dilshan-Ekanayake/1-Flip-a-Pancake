@@ -20,6 +20,7 @@ import {
   WORLD_ZONES,
   WORLDS,
   ZONES,
+  zonesOf,
 } from '../../shared/balance.js'
 import { formatDistance, formatNumber } from '../../shared/format.js'
 import {
@@ -46,7 +47,7 @@ import {
   usePortal,
 } from '../../shared/logic.js'
 import { PlayerSession } from '../../shared/session.js'
-import { DROP_SPOT, PAD_X, padCenterZ, PORTALS, ROLL_ZONE, SPAWN, STAR } from '../../shared/world.js'
+import { DROP_SPOT, EGG_STANDS, eggAt, PAD_X, padCenterZ, PORTALS, ROLL_ZONE, SPAWN, STAR } from '../../shared/world.js'
 
 const onPad = (i) => ({ x: PAD_X, y: 0.5, z: padCenterZ(i) })
 const inRollZone = () => ({ x: 0, y: 0, z: (ROLL_ZONE.minZ + ROLL_ZONE.maxZ) / 2 })
@@ -444,7 +445,7 @@ test('a rebirth gift is announced to the player', () => {
   toCap(profile)
   session.handle('rebirth', {}, 0)
   const reward = events.find((e) => e.type === 'reward')
-  assert.match(reward.payload.label, /REBIRTH 20 GIFT: 3 Volcano Eggs/)
+  assert.match(reward.payload.label, /REBIRTH 20 GIFT: 3 Toaster Eggs/)
 })
 
 // --- World 2 ---------------------------------------------------------------------
@@ -479,7 +480,30 @@ test('the portal opens at enough rebirths and Wins, without spending them, and g
   const saved = normalizeProfile(JSON.parse(JSON.stringify(p)), 'a', 'A')
   assert.equal(saved.world, 1)
   assert.equal(saved.world2Unlocked, true)
-  assert.equal(normalizeProfile({ ...p, world2Unlocked: false }, 'a', 'A').world, 0, 'no World 2 without the unlock')
+  assert.equal(normalizeProfile({ ...p, world2Unlocked: false, worldsUnlocked: 0 }, 'a', 'A').world, 0, 'no World 2 without the unlock')
+})
+
+test('the four worlds open in order, each at its rebirths and Trophies, and any opened one is free to visit', () => {
+  const p = createProfile('w', 'W')
+  p.rebirths = WORLD_PORTALS.world4.rebirths
+  p.wins = WORLD_PORTALS.world4.wins
+  assert.equal(usePortal(p, 3).ok, false, 'World 4 not before World 3')
+  assert.equal(usePortal(p, 2).ok, false, 'World 3 not before World 2')
+  assert.deepEqual(usePortal(p, 1), { ok: true, world: 1, first: true })
+  assert.deepEqual(usePortal(p, 2), { ok: true, world: 2, first: true })
+  assert.deepEqual(usePortal(p, 3), { ok: true, world: 3, first: true })
+  assert.equal(p.wins, WORLD_PORTALS.world4.wins, 'Trophies kept')
+  p.wins = 0
+  p.rebirths = 0
+  assert.deepEqual(usePortal(p, 0), { ok: true, world: 0 })
+  assert.deepEqual(usePortal(p, 2), { ok: true, world: 2 }, 'opened for good')
+  assert.equal(usePortal(p, 2).ok, false, 'already there')
+  const saved = normalizeProfile(JSON.parse(JSON.stringify(p)), 'w', 'W')
+  assert.equal(saved.world, 2)
+  assert.equal(saved.worldsUnlocked, 3)
+  // Each world pays its own multiplier per metre.
+  assert.equal(zonesOf(3)[5].winsPerMeter, ZONES[5].winsPerMeter * 27)
+  assert.equal(zonesOf(2)[5].winsPerMeter, ZONES[5].winsPerMeter * 9)
 })
 
 test('a roll in World 2 pays its multiplier and its own first-visit prizes', () => {
@@ -535,8 +559,34 @@ test("Palm Beach's treadmills and Beach Egg work there only", () => {
   // Better pets than the Volcano Egg - the next step up - and its rarest is the best of all.
   const avg = (id) => EGGS[id].pets.reduce((sum, [pet, w]) => sum + PETS[pet].mult * w, 0) / 100
   assert.ok(avg('beach') > avg('volcano') * 1.3)
-  const eggPets = Object.values(EGGS).flatMap((egg) => egg.pets.map(([pet]) => pet)).filter((pet) => pet !== 'kraken')
+  // The Kraken is the best of the first two worlds' pets (Frosty Peaks and Lava Kitchen go beyond).
+  const early = Object.values(EGGS).filter((egg) => egg.world === undefined || egg.world <= 1)
+  const eggPets = early.flatMap((egg) => egg.pets.map(([pet]) => pet)).filter((pet) => pet !== 'kraken')
   assert.ok(eggPets.every((pet) => PETS[pet].mult < PETS.kraken.mult))
+  // Each later world's egg is a clear step up on the one before.
+  assert.ok(avg('frost') > avg('beach') * 1.3)
+  assert.ok(avg('magma') > avg('frost') * 1.3)
+})
+
+test('the Frost and Magma eggs hatch in their own worlds only, from the east stand there', () => {
+  const p = createProfile('e', 'E')
+  p.wins = 1e12
+  p.worldsUnlocked = 3
+  p.world2Unlocked = true
+  for (const [world, egg, pets] of [
+    [2, 'frost', ['penguin', 'snowfox', 'polarbear', 'yeti']],
+    [3, 'magma', ['emberpup', 'lavaturtle', 'magmadrake', 'magmaking']],
+  ]) {
+    p.world = world === 2 ? 3 : 2
+    assert.equal(hatchEgg(p, egg, 1).ok, false, `${egg} not in the wrong world`)
+    p.world = world
+    const res = hatchEgg(p, egg, 1)
+    assert.equal(res.ok, true)
+    assert.ok(pets.includes(res.pets[0].id))
+    const east = EGG_STANDS.find((s) => s.byWorld)
+    assert.equal(eggAt(east, world), egg)
+  }
+  assert.equal(eggAt(EGG_STANDS.find((s) => s.byWorld), 0), 'beach', 'the Coconut egg stands locked at home')
 })
 
 test("Palm Beach's Secret Star: found once, there only, for x2 Power everywhere", () => {

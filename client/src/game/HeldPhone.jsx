@@ -5,16 +5,30 @@ import { handPhoneGeometry } from './handPhone'
 import { sharedMaterials } from './materials'
 
 /**
- * The phone in a character's right hand. The avatar moves this group onto its palm every
- * frame (its `handRef`); whoever owns it hides it while the phone is falling.
+ * The pan in a character's right hand. The avatar moves this group onto its palm every
+ * frame (its `handRef`). Its two children are the pan with its pancake in it and the
+ * empty pan: `showPancake(group, inPan)` picks one, so while the cake is up in the air
+ * the pan stays in your hand, empty.
  */
 export const HeldPhone = forwardRef(function HeldPhone({ phoneId }, ref) {
-  const mesh = useMemo(() => asToyInstance(handPhoneGeometry(phoneId), sharedMaterials().toy), [phoneId])
-  // The geometry is shared (cached); only the mesh is this hand's.
-  useEffect(() => () => mesh.dispose(), [mesh])
+  const full = useMemo(() => asToyInstance(handPhoneGeometry(phoneId, true), sharedMaterials().toy), [phoneId])
+  const empty = useMemo(() => {
+    const mesh = asToyInstance(handPhoneGeometry(phoneId, false), sharedMaterials().toy)
+    mesh.visible = false
+    return mesh
+  }, [phoneId])
+  // The geometry is shared (cached); only the meshes are this hand's.
+  useEffect(
+    () => () => {
+      full.dispose()
+      empty.dispose()
+    },
+    [full, empty],
+  )
   return (
     <group ref={ref}>
-      <primitive object={mesh} />
+      <primitive object={full} />
+      <primitive object={empty} />
     </group>
   )
 })

@@ -13,6 +13,7 @@ export const PANEL_LOADERS = {
   store: () => import('./StorePanel'),
   leaderboards: () => import('./LeaderboardsPanel'),
   settings: () => import('./SettingsPanel'),
+  worlds: () => import('./WorldsPanel'),
 }
 
 /** Fetches every panel in the background, when the browser is idle. */

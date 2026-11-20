@@ -143,42 +143,36 @@ const star = svg(
 )
 
 /**
- * Skill (the code's `health`): a chunky lightning bolt, glossy yellow with a white shine.
- * Still named `heart`, so every place that showed Health shows Skill.
+ * Strength (the code's `health`): the flexed arm. Still named `heart`, so every place
+ * that showed Health shows Strength.
  */
-const heart = svg(
-  `<path d="M58 6L18 56h24l-8 38 48-54H56z" fill="url(#ht-g)" stroke="${OUT}" stroke-width="6" stroke-linejoin="round"/>
-  <path d="M52 16L28 48" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".8"/>`,
-  vgrad('ht-g', [
-    [0, '#fffbd0'],
-    [0.45, '#ffd21f'],
-    [1, '#ff8a00'],
-  ]),
-)
+const heart = muscle
 
 /**
- * A phone, tipped over and falling, its screen cracked, with speed marks behind it - in a
- * thick ink outline. Still named `tire`, so every place that showed the template's tire
- * (the DROP button, the shop, the passes, the loading screen) shows the phone.
+ * A frying pan with a golden pancake flipping up out of it, in a thick ink outline.
+ * Still named `tire`, so every place that showed the template's tire (the LAUNCH
+ * button, the shop, the passes, the loading screen) shows the pan.
  */
 const tire = svg(
-  `<g transform="rotate(-24 52 50)">
-    <rect x="30" y="10" width="44" height="80" rx="10" fill="url(#ph-c)" stroke="${OUT}" stroke-width="6"/>
-    <rect x="36" y="18" width="32" height="62" rx="4" fill="url(#ph-s)" stroke="${OUT}" stroke-width="3"/>
-    <rect x="45" y="13" width="14" height="3.5" rx="1.75" fill="${OUT}"/>
-    <path d="M58 30l-6 12 8 6-10 14M52 42l-10 4M60 48l6 10" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M40 24q4-4 10-4" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+  `<g transform="rotate(-14 50 60)">
+    <rect x="62" y="64" width="34" height="11" rx="5.5" fill="#6a3a1e" stroke="${OUT}" stroke-width="5"/>
+    <ellipse cx="38" cy="70" rx="32" ry="13" fill="url(#pn-b)" stroke="${OUT}" stroke-width="6"/>
+    <ellipse cx="38" cy="66" rx="25" ry="8" fill="#2a2c33"/>
   </g>
-  <path d="M8 34l14 4M6 50l14 1M10 66l13-3" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-  <path d="M8 34l14 4M6 50l14 1M10 66l13-3" stroke="${OUT}" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>`,
-  vgrad('ph-c', [
-    [0, '#6aa8ff'],
-    [1, '#2a4fd8'],
+  <g transform="rotate(18 44 30)">
+    <ellipse cx="44" cy="32" rx="24" ry="10" fill="url(#pn-c)" stroke="${OUT}" stroke-width="5.5"/>
+    <ellipse cx="44" cy="29" rx="15" ry="4.5" fill="#ffe6a0" opacity=".9"/>
+    <rect x="38" y="20" width="10" height="7" rx="2" fill="#fff17a" stroke="${OUT}" stroke-width="3"/>
+  </g>
+  <path d="M20 14q-6 6-4 14M74 10q6 6 4 14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`,
+  vgrad('pn-b', [
+    [0, '#5a5e6a'],
+    [1, '#24262c'],
   ]) +
-    vgrad('ph-s', [
-      [0, '#bff6ff'],
-      [0.5, '#5fd6ff'],
-      [1, '#3a6bff'],
+    vgrad('pn-c', [
+      [0, '#ffd27a'],
+      [0.6, '#f2a640'],
+      [1, '#c87420'],
     ]),
 )
 
@@ -348,6 +342,9 @@ export const EGG_COLORS = {
   volcano: ['#5a3a30', '#2a1814', '#ff6a14'],
   // Sandy shell with blue waves, like the 3D Beach Egg (EggDisplays).
   beach: ['#fff3dc', '#2fb8e0', '#bff4ff'],
+  // Icy blue with snow-white spots; dark crust cracked with fire.
+  frost: ['#dff4ff', '#5ab0ff', '#ffffff'],
+  magma: ['#3a1a14', '#ff3a1a', '#ffb81f'],
 }
 
 const urlCache = new Map()

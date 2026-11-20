@@ -9,13 +9,13 @@ import { getQuality } from '../../store/quality'
 import { createBoxInstances, disposeBlocks } from '../blocks'
 import { TOSS_TIME } from '../practice'
 import { sharedMaterials, STYLE } from '../materials'
-import { T_RELEASE } from '../roll/dropPath'
+import { T_RELEASE } from '../roll/launchPath'
 import { runtime } from '../runtime'
 import { hideNameplatesFrom, NAMEPLATE_POOL_SIZE, placeNameplate } from './nameplates'
 
 /** Remote players are drawn this far in the past, so 10 Hz updates interpolate. */
 const INTERP_DELAY_MS = 110
-const MAX_REMOTES = 8
+const MAX_REMOTES = 12
 const PARTS = 6
 const S = 0.36
 

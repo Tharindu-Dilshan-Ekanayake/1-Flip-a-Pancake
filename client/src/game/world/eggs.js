@@ -1,4 +1,4 @@
-import { EGG_STANDS, FREE_REWARD, SPHINX_STAND } from '@shared/world'
+import { eggAt, EGG_STANDS, FREE_REWARD, SPHINX_STAND } from '@shared/world'
 
 import { STYLE } from '../materials'
 
@@ -37,10 +37,41 @@ function buildBeachStand(blocks, { x, z }) {
   blocks.add(x + 1.9, 4.32, z - 1.9, 1.1, 0.12, 1.1, '#ff6f61', STYLE.SMOOTH, 0.3 + Math.PI / 4)
 }
 
-export function buildEggStands(blocks) {
+/** The Frost Egg's plinth: a snow mound round a ring of ice, glowing ice crystals at its corners. */
+function buildFrostStand(blocks, { x, z }) {
+  blocks.addOn(x, 0, z, 4.4, 0.6, 4.4, '#e8f4ff', STYLE.STUDS)
+  blocks.addOn(x, 0.6, z, 3.8, 0.3, 3.8, '#9fe8ff', STYLE.GLOW)
+  blocks.addOn(x, 0.9, z, 3.2, 0.3, 3.2, '#ffffff', STYLE.SMOOTH)
+  for (const [dx, dz, h] of [[-1.9, -1.8, 2.2], [1.9, -1.7, 1.6], [-1.8, 1.9, 1.4], [1.9, 1.9, 2.4]]) {
+    blocks.add(x + dx, h / 2, z + dz, 0.6, h, 0.6, '#cff4ff', STYLE.GLOW, 0.5, 0, dx * 0.12)
+    blocks.add(x + dx * 1.12, h * 0.35, z + dz * 1.12, 0.4, h * 0.7, 0.4, '#7fc8ff', STYLE.GLOW, 0.3, 0, -dx * 0.2)
+  }
+}
+
+/** The Magma Egg's plinth: black basalt round a pool of lava, obsidian spikes at its corners. */
+function buildMagmaStand(blocks, { x, z }) {
+  blocks.addOn(x, 0, z, 4.4, 0.7, 4.4, '#1c1513')
+  blocks.addOn(x, 0.7, z, 3.8, 0.35, 3.8, '#ff5a14', STYLE.LAVA)
+  blocks.addOn(x, 1.05, z, 3.2, 0.3, 3.2, '#2a201c')
+  for (const [dx, dz, h] of [[-1.9, -1.8, 2.6], [1.9, -1.7, 2], [-1.8, 1.9, 1.8], [1.9, 1.9, 2.8]]) {
+    blocks.add(x + dx, h / 2, z + dz, 0.7, h, 0.7, '#140c14', STYLE.SMOOTH, 0.7, 0, dx * 0.1)
+    blocks.add(x + dx, 0.3, z + dz, 1.2, 0.6, 1.2, '#ff7a1a', STYLE.GLOW, 0.3)
+  }
+}
+
+export function buildEggStands(blocks, world = 0) {
   for (const stand of EGG_STANDS) {
-    if (stand.eggId === 'beach') {
+    const eggId = eggAt(stand, world)
+    if (eggId === 'beach') {
       buildBeachStand(blocks, stand)
+      continue
+    }
+    if (eggId === 'frost') {
+      buildFrostStand(blocks, stand)
+      continue
+    }
+    if (eggId === 'magma') {
+      buildMagmaStand(blocks, stand)
       continue
     }
     if (stand.big) {

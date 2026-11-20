@@ -30,7 +30,7 @@ export const useGame = create((set, get) => ({
     code: null,
     isPrivate: false,
     players: 1,
-    maxPlayers: 8,
+    maxPlayers: 12,
     message: null,
   },
   sphinxStock: SPHINX_STOCK_DEFAULT,

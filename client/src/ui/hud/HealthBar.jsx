@@ -74,7 +74,7 @@ function PackButton({ index, amount, price, afford }) {
     actions.buyPack(index)
   }
   return (
-    <ChunkyButton gradient={PACK_GRADIENTS[index]} onClick={buy} title={`+${formatNumber(amount)} Skill`} radius={8} border={5} style={{ width: u(290), height: u(76) }}>
+    <ChunkyButton gradient={PACK_GRADIENTS[index]} onClick={buy} title={`+${formatNumber(amount)} Strength`} radius={8} border={5} style={{ width: u(290), height: u(76) }}>
       <Icon name="heart" size={u(62)} className="absolute" style={{ left: u(10) }} />
       <span className="relative" style={{ fontSize: u(48), marginLeft: u(30) }}>
         <StrokeText stroke={u(10)}>+{formatNumber(amount)}</StrokeText>
@@ -104,17 +104,17 @@ export function HealthBar() {
 
   return (
     <div className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 flex-col items-center" style={{ bottom: u(14), width: u(WIDTH), gap: u(8), contain: 'layout style' }}>
-      <div className="relative flex w-full items-end justify-between" style={{ height: u(84) }}>
+      <div className="relative flex w-full items-end justify-between" style={{ height: u(58) }}>
         <span className="flex items-center" style={{ gap: u(6) }}>
-          <Icon name="heart" size={u(96)} />
-          <span style={{ fontSize: u(76), lineHeight: 1 }}>
-            <StrokeText stroke={u(13)} gradient={HEALTH_FILL}>
-              {formatNumber(health)} SKILL
+          <Icon name="heart" size={u(60)} />
+          <span style={{ fontSize: u(48), lineHeight: 1 }}>
+            <StrokeText stroke={u(9)} gradient={HEALTH_FILL}>
+              {formatNumber(health)} STRENGTH
             </StrokeText>
           </span>
         </span>
-        <span style={{ fontSize: u(36), marginBottom: u(4) }}>
-          <StrokeText stroke={u(7)} gradient={BOOST}>
+        <span style={{ fontSize: u(28), marginBottom: u(4) }}>
+          <StrokeText stroke={u(6)} gradient={BOOST}>
             {formatMultiplier(boost)} Multiplier
           </StrokeText>
         </span>

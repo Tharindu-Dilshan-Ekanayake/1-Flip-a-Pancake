@@ -11,16 +11,16 @@
  */
 
 /**
- * The lobby is a little mountain-top plaza high above the clouds: you spawn at its south
- * end and a candy path runs north, 90 m, to the DROP ZONE at the cliff edge, where you
- * throw your phone down onto the hotel far below. The throw pads stand close together
- * along the east side (each better than the last as you go north) and the phone shop
- * along the west; the eggs and leaderboards are back by the spawn.
+ * The lobby is a stone canyon, walled in by cliffs on every side: you spawn at its south
+ * end and a sandstone path runs north into the LAUNCH PIT in the middle, a round stone
+ * bowl where you launch your pancake into the sky. The flip mats stand along the east
+ * side (each better than the last as you go north) and the pan shop along the west; the
+ * eggs and leaderboards are back by the spawn.
  */
 export const SPAWN = { x: 0, z: 50 }
 
-/** The flat, walkable plaza. Hills surround it on every side but the track. */
-export const PLAZA = { minX: -48, maxX: 38, minZ: -40, maxZ: 69 }
+/** The flat, walkable plaza, symmetric about the path; stone cliffs wall it in all round. */
+export const PLAZA = { minX: -46, maxX: 42, minZ: -42, maxZ: 69 }
 /** The path down its middle (half its width). */
 export const PATH_HALF = 5
 
@@ -37,20 +37,40 @@ export const SLOPE_ANGLE = 0
 export const CANYON_HALF_WIDTH = 16
 
 /**
- * The yellow DROP ZONE (the template's roll zone) at the cliff edge: drops go from here.
- * Beyond its north edge the mountain falls away to the clouds, and the hotel far below.
+ * The LAUNCH PIT in the middle of the plaza: a round stone bowl you walk down into, its
+ * flat floor (radius `floor`) `depth` below the plaza, its sides sloping up to the plaza at
+ * `rim`. Launches go from its floor (the template's roll zone); nothing stands round its
+ * rim, so it's open to walk into from every side.
  */
-export const ROLL_ZONE = { minX: -13, maxX: 13, minZ: -40, maxZ: -21 }
-/** Where you're put back after a drop: just short of the edge, facing it. */
-export const ROLL_RETURN = { x: 0, z: -27 }
+export const PIT = { x: 0, z: 8, floor: 7.5, rim: 13, depth: 2.8 }
+/** The pit floor's bounding square (its middle is the pit's: tests and labels use it). */
+export const ROLL_ZONE = { minX: PIT.x - PIT.floor, maxX: PIT.x + PIT.floor, minZ: PIT.z - PIT.floor, maxZ: PIT.z + PIT.floor }
+/** Where you're put back after a launch: on the pit floor, south of the launch circle. */
+export const ROLL_RETURN = { x: PIT.x, z: PIT.z + 4.5 }
 
 /**
- * Where you stand to throw: right at the edge, in the gap in the railing. Pressing DROP
- * anywhere in the zone walks you here for the throw (the server only checks the zone).
+ * Where you stand to launch: just south of the pit's middle, so the pancake climbs right up
+ * its centre. Pressing LAUNCH anywhere on the floor walks you here (the server only checks
+ * you're on the floor).
  */
-export const DROP_SPOT = { x: 0, z: -38.6 }
-/** The start arch's pillars, either side of the zone. */
-export const ROLL_ARCH = { x: 15.5, z: -37 }
+export const DROP_SPOT = { x: PIT.x, z: PIT.z + 2.4 }
+/** The pit's sides are blocky terraces: this many steps from the plaza down to its floor. */
+export const PIT_STEPS = 5
+const PIT_STEP = PIT.depth / PIT_STEPS
+
+/**
+ * Height of the pit at (x, z): 0 outside the rim, -depth on the floor, and between them a
+ * flight of PIT_STEPS terraces (a smooth bowl's slope, rounded to whole steps) - the
+ * voxel steps rollZone.js draws, each low enough to walk up.
+ */
+export function pitHeightAt(x, z) {
+  const r = Math.hypot(x - PIT.x, z - PIT.z)
+  if (r >= PIT.rim) return 0
+  if (r <= PIT.floor) return -PIT.depth
+  const t = (r - PIT.floor) / (PIT.rim - PIT.floor)
+  const smooth = -PIT.depth * 0.5 * (1 + Math.cos(Math.PI * t))
+  return Math.round(smooth / PIT_STEP) * PIT_STEP + 0
+}
 
 /** Walkable ground; the controller clamps the player into it. Nothing past the start. */
 export const WALKABLE = [PLAZA]
@@ -68,7 +88,7 @@ export const PAD_PITCH = 7
 /** Radius of a pad's top: standing within it is training. */
 export const PAD_RADIUS = 2.7
 /** The pads' centre line, and their tops, a step up from the plaza. */
-export const PAD_X = 24
+export const PAD_X = 21
 export const PAD_HEIGHT = 0.5
 /** Pad 0 (the free one) is the southernmost, nearest spawn; the rest run north. */
 const PAD0_Z = 36
@@ -82,13 +102,15 @@ export const padCenterZ = (index) => PAD0_Z - index * PAD_PITCH
  * solid block of console, handrails and backboard drawn there. Training, you face it (east)
  * and run.
  */
-export const TABLE_LENGTH = 4.2
-export const TABLE_WIDTH = 2.4
+export const TABLE_LENGTH = 5
+export const TABLE_WIDTH = 1.1
 export const TABLE_HEIGHT = 1.05
 /** The solid block's near (west) end, its middle, and its far end beyond the backboard. */
 export const TABLE_NEAR_X = PAD_X + PAD_RADIUS + 0.05
 export const TABLE_X = TABLE_NEAR_X + TABLE_LENGTH / 2
 export const ROBOT_X = TABLE_NEAR_X + TABLE_LENGTH + 0.6
+/** Where each flip station's KG weight plate stands, at the end of its pan handle. */
+export const PLATE_X = TABLE_NEAR_X + TABLE_LENGTH + 1.2
 /** Each pad's running track: its floor runs back to a low barrier behind the backboard, this wide either side. */
 export const COURT_BACK_X = ROBOT_X + 1.5
 export const COURT_HALF = 3.1
@@ -151,23 +173,29 @@ export const standRect = (stand) => ({
 // --- Eggs, showcases, leaderboards --------------------------------------------------
 
 /**
- * The egg row stands back on the left (south-west), the Sphinx at its end; the big
- * Volcano egg has a spot of its own, front right on the way to the kick zone.
+ * The EGG HATCHERY, north of the pit: the six eggs on an arc facing it (EGG_ARC), the
+ * two big eggs at its ends and the four everyday ones between them, cheapest to dearest
+ * from west to east - with the portal behind its middle. (The Coconut egg hatches in
+ * Tropic Skies only; in the first world it stands locked, a taste of what's through.)
  */
+export const EGG_ARC = { x: 0, z: -14, radius: 20 }
+const eggOnArc = (deg) => ({
+  x: Math.round((EGG_ARC.x + Math.sin((deg * Math.PI) / 180) * EGG_ARC.radius) * 10) / 10,
+  z: Math.round((EGG_ARC.z + Math.cos((deg * Math.PI) / 180) * EGG_ARC.radius) * 10) / 10,
+})
 export const EGG_STANDS = [
-  { eggId: 'basic', x: -10, z: 46 },
-  { eggId: 'meadow', x: -18, z: 46 },
-  { eggId: 'sunset', x: -26, z: 46 },
-  { eggId: 'unicorn', x: -34, z: 46 },
-  { eggId: 'volcano', x: 10, z: -14, big: true },
-  // Palm Beach's Beach Egg, the Volcano egg's twin across the plaza (hatches in Palm
-  // Beach only; in World 1 it stands locked, a taste of what's through the portal).
-  { eggId: 'beach', x: -10, z: -14, big: true },
+  { eggId: 'volcano', ...eggOnArc(235), big: true },
+  { eggId: 'basic', ...eggOnArc(213) },
+  { eggId: 'meadow', ...eggOnArc(191) },
+  { eggId: 'sunset', ...eggOnArc(169) },
+  { eggId: 'unicorn', ...eggOnArc(147) },
+  // Each world's own egg: the Coconut egg (shown locked at home), the Frost egg, the Magma egg.
+  { eggId: 'beach', byWorld: ['beach', 'beach', 'frost', 'magma'], ...eggOnArc(125), big: true },
 ]
 export const EGG_TRIGGER_RADIUS = 4.2
 
-/** Limited premium pet on display. */
-export const SPHINX_STAND = { x: -43, z: 46 }
+/** Limited premium pet on display: west of the spawn, the free gift's twin to the east. */
+export const SPHINX_STAND = { x: -15, z: 52 }
 
 /** Four boards along the back of the plaza, as in the reference. */
 export const LEADERBOARDS = [
@@ -177,10 +205,10 @@ export const LEADERBOARDS = [
   { id: 'playtime', x: 18, z: 66.5 },
 ]
 
-/** The world portal beside the start arch, to the west. Name and Wins in balance.js. */
-export const PORTALS = [{ id: 'world2', x: -28, z: -34, radius: 3.4 }]
+/** The world portal at the back of the hatchery, on the path's line. Name and Trophies in balance.js. */
+export const PORTALS = [{ id: 'world2', x: 0, z: -38, radius: 3.4 }]
 
-export const FREE_REWARD = { x: 12, z: 51, radius: 3 }
+export const FREE_REWARD = { x: 15, z: 52, radius: 3 }
 
 /**
  * Palm Beach's Secret Star (balance SECRET_STAR): tucked away behind the middle of the
@@ -188,6 +216,54 @@ export const FREE_REWARD = { x: 12, z: 51, radius: 3 }
  * round. Picked up within `radius`, in Palm Beach only.
  */
 export const STAR = { x: -6, z: 68.2, y: 1.4, radius: 1.8 }
+
+// --- Plaza decor --------------------------------------------------------------------
+
+/** The walkway round the pit, out to this radius (painted; ground.js). */
+export const PIT_WALK = PIT.rim + 4
+/**
+ * Lamp posts: either side of the path from the spawn up to the pit and from the pit on
+ * to the hatchery, and one on each diagonal round the pit's walkway.
+ */
+export const LAMPS = [
+  ...[26, 34, 42].flatMap((z) => [{ x: -6.8, z }, { x: 6.8, z }]),
+  { x: -6.8, z: -10 },
+  { x: 6.8, z: -10 },
+  ...[45, 135, 225, 315].map((deg) => ({
+    x: Math.round(Math.sin((deg * Math.PI) / 180) * (PIT_WALK + 1.5) * 10) / 10,
+    z: Math.round((PIT.z + Math.cos((deg * Math.PI) / 180) * (PIT_WALK + 1.5)) * 10) / 10,
+  })),
+]
+/** Flower planters at the corners where the paths meet the walkway. */
+export const PLANTERS = [
+  { x: -11, z: 30 },
+  { x: 11, z: 30 },
+  { x: -11, z: -13 },
+  { x: 11, z: -13 },
+]
+/** A giant pancake-stack statue in each corner of the plaza, mirrored about its middle. */
+export const STATUES = [
+  { x: -34, z: -31 },
+  { x: 30, z: -31 },
+  { x: -34, z: 57 },
+  { x: 30, z: 57 },
+]
+/** A royal fountain either side of the plaza's south half (themed with each world: water, ice, lava). */
+export const FOUNTAINS = [
+  { x: -29, z: 46, radius: 3.4 },
+  { x: 26, z: 46, radius: 3.4 },
+]
+/** The hedge round the back of the hatchery, with a gap on the path to the portal. */
+export const HEDGE = { radius: EGG_ARC.radius + 4.5, from: 118, to: 242, gap: 14, step: 6 }
+export const HEDGE_SEGMENTS = (() => {
+  const out = []
+  for (let deg = HEDGE.from; deg <= HEDGE.to + 0.01; deg += HEDGE.step) {
+    if (Math.abs(deg - 180) < HEDGE.gap) continue
+    const a = (deg * Math.PI) / 180
+    out.push({ x: EGG_ARC.x + Math.sin(a) * HEDGE.radius, z: EGG_ARC.z + Math.cos(a) * HEDGE.radius, yaw: a })
+  }
+  return out
+})()
 
 // --- Collision ----------------------------------------------------------------------
 
@@ -207,19 +283,22 @@ export const STATIC_COLLIDERS = [
   box(SPHINX_STAND.x, SPHINX_STAND.z, 3, 3),
   ...LEADERBOARDS.map((b) => box(b.x, b.z, 4.6, 0.5)),
   box(FREE_REWARD.x, FREE_REWARD.z, 1.4, 1.4),
-  // The treadmills' console blocks, and the barrier across each running track's back.
+  // Lamp posts, planters and the hatchery hedge.
+  ...LAMPS.map((l) => box(l.x, l.z, 0.3, 0.3)),
+  ...PLANTERS.map((p) => box(p.x, p.z, 1.6, 0.8)),
+  ...STATUES.map((s) => box(s.x, s.z, 2.3, 2.3)),
+  ...FOUNTAINS.map((f) => box(f.x, f.z, f.radius, f.radius)),
+  ...HEDGE_SEGMENTS.map((h) => box(h.x, h.z, 1.1, 1.1)),
+  // Each flip station's pan handle reaching east, and the weight plate at its end.
   ...Array.from({ length: PAD_COUNT }, (_, i) => ({
     minX: TABLE_NEAR_X,
-    maxX: ROBOT_X + 0.7,
+    maxX: TABLE_NEAR_X + TABLE_LENGTH,
     minZ: padCenterZ(i) - TABLE_WIDTH / 2,
     maxZ: padCenterZ(i) + TABLE_WIDTH / 2,
   })),
-  ...Array.from({ length: PAD_COUNT }, (_, i) => box(COURT_BACK_X, padCenterZ(i), 0.15, COURT_HALF)),
+  ...Array.from({ length: PAD_COUNT }, (_, i) => box(PLATE_X, padCenterZ(i), 0.35, 1.8)),
   // Each portal ring's base; the swirl itself is walk-through.
   ...PORTALS.flatMap((p) => [box(p.x - p.radius, p.z, 0.6, 0.8), box(p.x + p.radius, p.z, 0.6, 0.8)]),
-  // The start arch's pillars.
-  box(-ROLL_ARCH.x, ROLL_ARCH.z, 1, 1),
-  box(ROLL_ARCH.x, ROLL_ARCH.z, 1, 1),
   // The canyon's rims either side of its mouth.
   { minX: PLAZA.minX, maxX: -CANYON_HALF_WIDTH - 1, minZ: PLAZA.minZ - 1, maxZ: PLAZA.minZ + 0.6 },
   { minX: CANYON_HALF_WIDTH + 1, maxX: PLAZA.maxX, minZ: PLAZA.minZ - 1, maxZ: PLAZA.minZ + 0.6 },
@@ -247,7 +326,8 @@ export function padAt(x, z, margin = 0) {
   return -1
 }
 
-export const inRollZone = (x, z, margin = 0) => inRect(ROLL_ZONE, x, z, margin)
+/** Whether (x, z) is on the launch pit's floor, give or take `margin`. */
+export const inRollZone = (x, z, margin = 0) => Math.hypot(x - PIT.x, z - PIT.z) <= PIT.floor + margin
 
 /** The portal whose swirl (x, z) is in, give or take `margin`, or null. */
 export function portalAt(x, z, margin = 0) {
@@ -273,18 +353,27 @@ export function standAt(x, z) {
   return -1
 }
 
-/** The egg stand within reach of (x, z), or null. */
+/** The egg stand `stand` holds in world `world` (the east stand's changes with the world). */
+export const eggAt = (stand, world = 0) => (stand ? (stand.byWorld?.[world] ?? stand.eggId) : null)
+
+/** The nearest egg stand within reach of (x, z), or null (on the arc their reaches overlap). */
 export function eggStandNear(x, z) {
+  let best = null
+  let bestD = Infinity
   for (const stand of EGG_STANDS) {
+    const d = Math.hypot(stand.x - x, stand.z - z)
     const reach = EGG_TRIGGER_RADIUS + (stand.big ? 1 : 0)
-    if (Math.hypot(stand.x - x, stand.z - z) <= reach) return stand
+    if (d <= reach && d < bestD) {
+      best = stand
+      bestD = d
+    }
   }
-  return null
+  return best
 }
 
-/** Height of the floor at (x, z): raised platforms, else the ground at 0. */
+/** Height of the floor at (x, z): raised platforms, the launch pit, else the ground at 0. */
 export function groundHeightAt(x, z) {
-  let h = 0
+  let h = pitHeightAt(x, z)
   for (const p of PLATFORMS) {
     if (p.height > h && inRect(p, x, z)) h = p.height
   }
